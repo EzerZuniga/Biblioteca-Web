@@ -41,8 +41,8 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Conectado a MySQL");
-    app.listen(PORT, () =>
-      console.log(`Servidor listo en http://localhost:${PORT}`),
+    app.listen(PORT, "0.0.0.0", () =>
+      console.log(`Servidor listo en http://0.0.0.0:${PORT}`),
     );
   })
   .catch((error) => {
