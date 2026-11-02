@@ -1,4 +1,3 @@
-/* ===== Biblioteca: estilos compartidos ===== */
 :root {
   --papel: #F0F2EE;
   --superficie: #FFFFFF;
@@ -27,7 +26,6 @@ a { color: var(--azul); }
 :focus-visible { outline: 3px solid #7FA6D9; outline-offset: 2px; }
 [hidden] { display: none !important; }
 
-/* ----- Barra superior ----- */
 .barra { background: var(--tinta); color: #E8EDF3; }
 .barra-interior { max-width: 1080px; margin: 0 auto; padding: .7rem 1.25rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
 .marca { font-family: var(--serif); font-size: 1.3rem; font-weight: 600; color: #fff; text-decoration: none; }
@@ -37,12 +35,10 @@ a { color: var(--azul); }
 .barra nav a[aria-current="page"] { background: #fff; color: var(--tinta); font-weight: 600; }
 .sesion { display: flex; align-items: center; gap: .75rem; font-size: .92rem; }
 
-/* ----- Contenido ----- */
 .contenedor { max-width: 1080px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
 .encabezado { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .encabezado p { margin: 0; }
 
-/* ----- Botones ----- */
 .btn { font: inherit; font-weight: 600; background: var(--azul); color: #fff; border: 1px solid var(--azul); border-radius: 4px; padding: .55rem 1.1rem; cursor: pointer; }
 .btn:hover { background: var(--azul-osc); border-color: var(--azul-osc); }
 .btn:disabled { background: #AEB8C4; border-color: #AEB8C4; cursor: not-allowed; }
@@ -54,7 +50,6 @@ a { color: var(--azul); }
 .btn-peligro:hover { background: var(--peligro-bg); color: var(--peligro); border-color: var(--peligro); }
 .btn-chico { padding: .3rem .7rem; font-size: .88rem; }
 
-/* ----- Formularios ----- */
 label { display: flex; flex-direction: column; gap: .3rem; font-weight: 600; font-size: .92rem; }
 input, select { font: inherit; font-weight: 400; color: var(--tinta); background: #fff; border: 1px solid #9AA7B5; border-radius: 4px; padding: .55rem .7rem; width: 100%; }
 input:focus, select:focus { border-color: var(--azul); }
@@ -64,7 +59,6 @@ input:focus, select:focus { border-color: var(--azul); }
 .error { background: var(--peligro-bg); color: var(--peligro); border-radius: 4px; padding: .6rem .8rem; margin: 0 0 1rem; font-size: .94rem; }
 .aviso { background: var(--ok-bg); color: var(--ok); border-radius: 4px; padding: .6rem .8rem; margin: 0 0 1rem; font-size: .94rem; }
 
-/* ----- Tablas ----- */
 .tabla-wrap { overflow-x: auto; background: var(--superficie); border: 1px solid var(--borde); border-radius: 6px; }
 table { width: 100%; border-collapse: collapse; min-width: 640px; }
 th, td { text-align: left; padding: .7rem .9rem; border-bottom: 1px solid var(--borde); vertical-align: middle; }
@@ -72,14 +66,12 @@ th { font-size: .86rem; font-weight: 600; color: var(--suave); background: #F7F8
 tr:last-child td { border-bottom: 0; }
 td.acciones-celda { white-space: nowrap; display: flex; gap: .4rem; border-bottom: 0; }
 
-/* ----- Estados y código de préstamo ----- */
 .estado { display: inline-block; font-size: .84rem; font-weight: 600; padding: .15rem .65rem; border-radius: 999px; }
 .estado-pendiente { background: #FBEFD0; color: #7A5200; }
 .estado-prestado { background: #DCE8F7; color: #1E4A80; }
 .estado-devuelto { background: var(--ok-bg); color: var(--ok); }
 .codigo { font-family: var(--mono); font-size: .92rem; letter-spacing: .08em; color: var(--azul-osc); background: #EEF3FA; border: 1.5px dashed var(--azul); border-radius: 3px; padding: .1rem .45rem; }
 
-/* ----- Catálogo ----- */
 .buscador { max-width: 420px; }
 .grid-libros { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
 .libro { display: flex; background: var(--superficie); border: 1px solid var(--borde); border-radius: 6px; overflow: hidden; }
@@ -95,13 +87,11 @@ td.acciones-celda { white-space: nowrap; display: flex; gap: .4rem; border-botto
 .vacio { text-align: center; padding: 2.5rem 1rem; color: var(--suave); }
 .vacio strong { display: block; color: var(--tinta); font-family: var(--serif); font-size: 1.15rem; margin-bottom: .25rem; }
 
-/* ----- Avisos flotantes ----- */
 #toasts { position: fixed; right: 1rem; bottom: 1rem; display: flex; flex-direction: column; gap: .5rem; z-index: 50; max-width: min(380px, calc(100vw - 2rem)); }
 .toast { background: var(--tinta); color: #fff; border-left: 5px solid #6FB58A; border-radius: 4px; padding: .7rem .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.25); transition: opacity .25s; }
 .toast.error { background: #3A1B1B; border-left-color: #E08080; color: #fff; }
 .toast.sale { opacity: 0; }
 
-/* ----- Login y registro ----- */
 .auth { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
 .auth-lado { background: var(--tinta); color: #DCE4EE; padding: 3rem; display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
 .auth-lado h1 { font-size: 2.5rem; color: #fff; max-width: 14ch; }

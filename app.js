@@ -1,11 +1,11 @@
-require('dotenv').config({ quiet: true });
-const path = require('path');
-const express = require('express');
-const cors = require('cors');
-const { sequelize } = require('./models');
+require("dotenv").config({ quiet: true });
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+const { sequelize } = require("./models");
 
 if (!process.env.JWT_SECRET) {
-  console.error('Falta JWT_SECRET en el archivo .env');
+  console.error("Falta JWT_SECRET en el archivo .env");
   process.exit(1);
 }
 
@@ -14,27 +14,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// El frontend (carpeta public) se sirve desde el mismo servidor
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-// Rutas de la API
-app.use('/auth', require('./routes/authRoutes'));
-app.use('/usuarios', require('./routes/usuarioRoutes'));
-app.use('/libros', require('./routes/libroRoutes'));
-app.use('/prestamos', require('./routes/prestamoRoutes'));
+app.use("/auth", require("./routes/authRoutes"));
+app.use("/usuarios", require("./routes/usuarioRoutes"));
+app.use("/libros", require("./routes/libroRoutes"));
+app.use("/prestamos", require("./routes/prestamoRoutes"));
 
-// Ruta no encontrada
 app.use((req, res) => {
-  res.status(404).json({ mensaje: 'Ruta no encontrada' });
+  res.status(404).json({ mensaje: "Ruta no encontrada" });
 });
 
-// JSON mal formado u otros errores no controlados
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ mensaje: 'El cuerpo de la petición no es un JSON válido' });
+  if (err.type === "entity.parse.failed") {
+    return res
+      .status(400)
+      .json({ mensaje: "El cuerpo de la petición no es un JSON válido" });
   }
   console.error(err);
-  res.status(500).json({ mensaje: 'Error del servidor' });
+  res.status(500).json({ mensaje: "Error del servidor" });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -42,11 +40,15 @@ const PORT = process.env.PORT || 3000;
 sequelize
   .authenticate()
   .then(() => {
-    console.log('Conectado a MySQL');
-    app.listen(PORT, () => console.log(`Servidor listo en http://localhost:${PORT}`));
+    console.log("Conectado a MySQL");
+    app.listen(PORT, () =>
+      console.log(`Servidor listo en http://localhost:${PORT}`),
+    );
   })
   .catch((error) => {
-    console.error('No se pudo conectar a MySQL. Revisa tu archivo .env y que MySQL esté encendido.');
+    console.error(
+      "No se pudo conectar a MySQL. Revisa tu archivo .env y que MySQL esté encendido.",
+    );
     console.error(error.message);
     process.exit(1);
   });

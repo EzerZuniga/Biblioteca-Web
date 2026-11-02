@@ -1,8 +1,8 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
 
 const Prestamo = sequelize.define(
-  'Prestamo',
+  "Prestamo",
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     usuario_id: { type: DataTypes.INTEGER, allowNull: false },
@@ -11,12 +11,12 @@ const Prestamo = sequelize.define(
     fecha_prestamo: { type: DataTypes.DATEONLY, allowNull: true },
     fecha_devolucion: { type: DataTypes.DATEONLY, allowNull: true },
     estado: {
-      type: DataTypes.ENUM('pendiente', 'prestado', 'devuelto'),
+      type: DataTypes.ENUM("pendiente", "prestado", "devuelto"),
       allowNull: false,
-      defaultValue: 'pendiente',
+      defaultValue: "pendiente",
     },
   },
-  { tableName: 'prestamos', timestamps: false }
+  { tableName: "prestamos", timestamps: false },
 );
 
 module.exports = Prestamo;

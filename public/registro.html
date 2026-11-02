@@ -1,39 +1,65 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crear cuenta - Biblioteca</title>
-  <link rel="stylesheet" href="/css/estilos.css">
-</head>
-<body>
-  <main class="auth">
-    <section class="auth-lado">
-      <h1>Crea tu cuenta para pedir libros.</h1>
-      <p>Solo necesitas tu nombre, un email y una contraseña. Tu cuenta nueva es de tipo usuario.</p>
-    </section>
-    <section class="auth-form">
-      <form id="formRegistro" novalidate>
-        <h2>Crear cuenta</h2>
-        <p id="error" class="error" role="alert" hidden></p>
-        <label>Nombre completo
-          <input type="text" id="nombre" autocomplete="name" maxlength="100" required>
-        </label>
-        <label>Email
-          <input type="email" id="email" autocomplete="username" required>
-        </label>
-        <label>Contraseña (mínimo 6 caracteres)
-          <input type="password" id="password" autocomplete="new-password" minlength="6" required>
-        </label>
-        <label>Repite la contraseña
-          <input type="password" id="password2" autocomplete="new-password" required>
-        </label>
-        <button class="btn" type="submit" id="btnCrear">Crear cuenta</button>
-        <p class="suave">¿Ya tienes cuenta? <a href="/login.html">Inicia sesión</a></p>
-      </form>
-    </section>
-  </main>
-  <script src="/js/api.js"></script>
-  <script src="/js/registro.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear cuenta - Biblioteca</title>
+    <link rel="stylesheet" href="/css/estilos.css" />
+  </head>
+  <body>
+    <main class="auth">
+      <section class="auth-lado">
+        <h1>Crea tu cuenta para pedir libros.</h1>
+        <p>
+          Solo necesitas tu nombre, un email y una contraseña. Tu cuenta nueva
+          es de tipo usuario.
+        </p>
+      </section>
+      <section class="auth-form">
+        <form id="formRegistro" novalidate>
+          <h2>Crear cuenta</h2>
+          <p id="error" class="error" role="alert" hidden></p>
+          <label
+            >Nombre completo
+            <input
+              type="text"
+              id="nombre"
+              autocomplete="name"
+              maxlength="100"
+              required
+            />
+          </label>
+          <label
+            >Email
+            <input type="email" id="email" autocomplete="username" required />
+          </label>
+          <label
+            >Contraseña (mínimo 6 caracteres)
+            <input
+              type="password"
+              id="password"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            />
+          </label>
+          <label
+            >Repite la contraseña
+            <input
+              type="password"
+              id="password2"
+              autocomplete="new-password"
+              required
+            />
+          </label>
+          <button class="btn" type="submit" id="btnCrear">Crear cuenta</button>
+          <p class="suave">
+            ¿Ya tienes cuenta? <a href="/login.html">Inicia sesión</a>
+          </p>
+        </form>
+      </section>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/registro.js"></script>
+  </body>
 </html>
