@@ -24,11 +24,11 @@ function pintar() {
     .map(
       (l) => `
     <tr>
-      <td><strong>${esc(l.titulo)}</strong></td>
-      <td>${esc(l.autor)}</td>
-      <td>${esc(l.categoria)}</td>
-      <td>${l.cantidad}</td>
-      <td class="acciones-celda">
+      <td data-label="Título"><strong>${esc(l.titulo)}</strong></td>
+      <td data-label="Autor">${esc(l.autor)}</td>
+      <td data-label="Categoría">${esc(l.categoria)}</td>
+      <td data-label="Cantidad">${l.cantidad}</td>
+      <td data-label="Acciones" class="acciones-celda">
         <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${l.id}">Editar</button>
         <button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${l.id}">Eliminar</button>
       </td>

@@ -41,13 +41,13 @@ function pintar() {
       }
       return `
       <tr>
-        <td><span class="codigo">${esc(p.codigo)}</span></td>
-        <td>${esc(p.Usuario?.nombre)}<br><span class="suave">${esc(p.Usuario?.email)}</span></td>
-        <td>${esc(p.Libro?.titulo)}</td>
-        <td>${badgeEstado(p.estado)}</td>
-        <td>${formatearFecha(p.fecha_prestamo)}</td>
-        <td>${formatearFecha(p.fecha_devolucion)}</td>
-        <td>${accion}</td>
+        <td data-label="Código"><span class="codigo">${esc(p.codigo)}</span></td>
+        <td data-label="Usuario">${esc(p.Usuario?.nombre)}<br><span class="suave">${esc(p.Usuario?.email)}</span></td>
+        <td data-label="Libro">${esc(p.Libro?.titulo)}</td>
+        <td data-label="Estado">${badgeEstado(p.estado)}</td>
+        <td data-label="Préstamo">${formatearFecha(p.fecha_prestamo)}</td>
+        <td data-label="Devolución">${formatearFecha(p.fecha_devolucion)}</td>
+        <td data-label="Acción">${accion}</td>
       </tr>`;
     })
     .join("");

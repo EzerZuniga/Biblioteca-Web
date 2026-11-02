@@ -20,10 +20,10 @@ function pintar() {
     .map(
       (u) => `
     <tr>
-      <td><strong>${esc(u.nombre)}</strong></td>
-      <td>${esc(u.email)}</td>
-      <td>${u.rol === "admin" ? "Administrador" : "Usuario"}</td>
-      <td class="acciones-celda">
+      <td data-label="Nombre"><strong>${esc(u.nombre)}</strong></td>
+      <td data-label="Email">${esc(u.email)}</td>
+      <td data-label="Rol">${u.rol === "admin" ? "Administrador" : "Usuario"}</td>
+      <td data-label="Acciones" class="acciones-celda">
         <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${u.id}">Editar</button>
         ${u.id === yo.id ? "" : `<button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${u.id}">Eliminar</button>`}
       </td>

@@ -18,11 +18,11 @@ async function cargar() {
           .map(
             (p) => `
           <tr>
-            <td><span class="codigo">${esc(p.codigo)}</span></td>
-            <td><strong>${esc(p.Libro?.titulo)}</strong><br><span class="suave">${esc(p.Libro?.autor)}</span></td>
-            <td>${badgeEstado(p.estado)}</td>
-            <td>${formatearFecha(p.fecha_prestamo)}</td>
-            <td>${formatearFecha(p.fecha_devolucion)}</td>
+              <td data-label="Código"><span class="codigo">${esc(p.codigo)}</span></td>
+              <td data-label="Libro"><strong>${esc(p.Libro?.titulo)}</strong><br><span class="suave">${esc(p.Libro?.autor)}</span></td>
+              <td data-label="Estado">${badgeEstado(p.estado)}</td>
+              <td data-label="Fecha de préstamo">${formatearFecha(p.fecha_prestamo)}</td>
+              <td data-label="Fecha de devolución">${formatearFecha(p.fecha_devolucion)}</td>
           </tr>`,
           )
           .join("")}

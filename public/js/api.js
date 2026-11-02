@@ -125,7 +125,12 @@ function renderNavbar() {
   barra.innerHTML = `
     <div class="barra-interior">
       <a class="marca" href="/">Biblioteca</a>
-      <nav aria-label="Principal">
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="navegacion-principal" aria-label="Abrir menú">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav id="navegacion-principal" aria-label="Principal">
         ${enlaces
           .map(
             ([href, texto]) =>
@@ -133,11 +138,41 @@ function renderNavbar() {
           )
           .join("")}
       </nav>
-      <div class="sesion">
+      <div class="sesion" id="controles-sesion">
         <span>${esc(usuario.nombre)}</span>
         <button class="btn btn-secundario btn-chico" id="btnSalir" type="button">Cerrar sesión</button>
       </div>
     </div>`;
   document.body.prepend(barra);
+
+  const botonMenu = barra.querySelector(".menu-toggle");
+  const cerrarMenu = () => {
+    barra.classList.remove("menu-abierto");
+    botonMenu.setAttribute("aria-expanded", "false");
+    botonMenu.setAttribute("aria-label", "Abrir menú");
+  };
+
+  botonMenu.addEventListener("click", () => {
+    const abierto = botonMenu.getAttribute("aria-expanded") !== "true";
+    barra.classList.toggle("menu-abierto", abierto);
+    botonMenu.setAttribute("aria-expanded", String(abierto));
+    botonMenu.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+  });
+
+  barra.querySelectorAll("nav a").forEach((enlace) => {
+    enlace.addEventListener("click", cerrarMenu);
+  });
+
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && barra.classList.contains("menu-abierto")) {
+      cerrarMenu();
+      botonMenu.focus();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) cerrarMenu();
+  });
+
   $("btnSalir").addEventListener("click", cerrarSesion);
 }
