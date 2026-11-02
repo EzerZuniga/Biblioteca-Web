@@ -39,6 +39,8 @@ const PORT = process.env.PORT || 3000;
 
 sequelize
   .authenticate()
+  .then(() => sequelize.sync()) // crea solo las tablas que falten; no modifica las existentes
+  .then(() => require("./database/seed")()) // datos iniciales solo si las tablas están vacías
   .then(() => {
     console.log("Conectado a MySQL");
     app.listen(PORT, "0.0.0.0", () =>
