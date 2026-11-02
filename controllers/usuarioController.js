@@ -1,142 +1,87 @@
-const crypto = require('crypto');
-const { Op } = require('sequelize');
-const { sequelize, Usuario, Libro, Prestamo } = require('../models');
+const bcrypt = require('bcrypt');
+const { Usuario, Prestamo } = require('../models');
+const { emailValido } = require('../utils/validar');
 
-// Error con código HTTP, para cortar el flujo (y revertir la transacción) con un mensaje claro
-class ErrorNegocio extends Error {
-  constructor(status, mensaje) {
-    super(mensaje);
-    this.status = status;
-  }
-}
-
-const responderError = (res, error) => {
-  if (error instanceof ErrorNegocio) {
-    return res.status(error.status).json({ mensaje: error.message });
-  }
-  console.error(error);
-  return res.status(500).json({ mensaje: 'Error del servidor' });
-};
-
-// Fecha de hoy en formato YYYY-MM-DD (hora local del servidor)
-const hoy = () => {
-  const d = new Date();
-  const dos = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
-};
-
-// Código de préstamo con crypto. Ejemplo: A7F3C91D
-const generarCodigo = () => crypto.randomBytes(4).toString('hex').toUpperCase();
-
-const codigoUnico = async () => {
-  for (let i = 0; i < 5; i++) {
-    const codigo = generarCodigo();
-    const existe = await Prestamo.findOne({ where: { codigo } });
-    if (!existe) return codigo;
-  }
-  throw new Error('No se pudo generar un código único');
-};
-
-// Datos relacionados que el frontend necesita para mostrar títulos y nombres
-const incluir = [
-  { model: Libro, attributes: ['id', 'titulo', 'autor'] },
-  { model: Usuario, attributes: ['id', 'nombre', 'email'] },
-];
-
-// POST /prestamos (usuario) -> crea la solicitud en estado "pendiente"
-exports.crear = async (req, res) => {
-  try {
-    const libro_id = Number(req.body.libro_id);
-    if (!Number.isInteger(libro_id) || libro_id < 1) {
-      throw new ErrorNegocio(400, 'Indica un libro válido');
-    }
-
-    const libro = await Libro.findByPk(libro_id);
-    if (!libro) throw new ErrorNegocio(404, 'El libro no existe');
-    if (libro.cantidad < 1) throw new ErrorNegocio(400, 'No hay ejemplares disponibles de este libro');
-
-    const activo = await Prestamo.findOne({
-      where: {
-        usuario_id: req.usuario.id,
-        libro_id,
-        estado: { [Op.in]: ['pendiente', 'prestado'] },
-      },
-    });
-    if (activo) throw new ErrorNegocio(409, 'Ya tienes una solicitud o un préstamo activo de este libro');
-
-    const codigo = await codigoUnico();
-    const prestamo = await Prestamo.create({
-      usuario_id: req.usuario.id,
-      libro_id,
-      codigo,
-      estado: 'pendiente',
-    });
-
-    res.status(201).json({ mensaje: `Solicitud enviada. Tu código es ${codigo}`, prestamo });
-  } catch (error) {
-    responderError(res, error);
-  }
-};
-
-// GET /prestamos -> el admin ve todos; el usuario solo los suyos
+// GET /usuarios (admin)
 exports.listar = async (req, res) => {
   try {
-    const where = req.usuario.rol === 'admin' ? {} : { usuario_id: req.usuario.id };
-    const prestamos = await Prestamo.findAll({ where, include: incluir, order: [['id', 'DESC']] });
-    res.json(prestamos);
-  } catch (error) {
-    responderError(res, error);
-  }
-};
-
-// PUT /prestamos/:id/aprobar (admin) -> pendiente -> prestado, descuenta 1 del stock
-exports.aprobar = async (req, res) => {
-  try {
-    const prestamo = await sequelize.transaction(async (t) => {
-      const p = await Prestamo.findByPk(req.params.id, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!p) throw new ErrorNegocio(404, 'Préstamo no encontrado');
-      if (p.estado !== 'pendiente') throw new ErrorNegocio(400, 'Solo se pueden aprobar préstamos pendientes');
-
-      const libro = await Libro.findByPk(p.libro_id, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!libro || libro.cantidad < 1) throw new ErrorNegocio(400, 'No quedan ejemplares disponibles para aprobar');
-
-      libro.cantidad -= 1;
-      await libro.save({ transaction: t });
-
-      p.estado = 'prestado';
-      p.fecha_prestamo = hoy();
-      await p.save({ transaction: t });
-      return p;
+    const usuarios = await Usuario.findAll({
+      attributes: { exclude: ['password'] },
+      order: [['id', 'ASC']],
     });
-
-    res.json({ mensaje: 'Préstamo aprobado', prestamo });
+    res.json(usuarios);
   } catch (error) {
-    responderError(res, error);
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error del servidor' });
   }
 };
 
-// PUT /prestamos/:id/devolver (admin) -> prestado -> devuelto, devuelve 1 al stock
-exports.devolver = async (req, res) => {
+// PUT /usuarios/:id (admin)
+exports.actualizar = async (req, res) => {
   try {
-    const prestamo = await sequelize.transaction(async (t) => {
-      const p = await Prestamo.findByPk(req.params.id, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!p) throw new ErrorNegocio(404, 'Préstamo no encontrado');
-      if (p.estado !== 'prestado') throw new ErrorNegocio(400, 'Solo se pueden devolver préstamos que están prestados');
+    const usuario = await Usuario.findByPk(req.params.id);
+    if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
-      const libro = await Libro.findByPk(p.libro_id, { transaction: t, lock: t.LOCK.UPDATE });
-      if (libro) {
-        libro.cantidad += 1;
-        await libro.save({ transaction: t });
+    const { nombre, email, rol, password } = req.body;
+
+    if (nombre !== undefined) {
+      if (!String(nombre).trim()) return res.status(400).json({ mensaje: 'El nombre no puede estar vacío' });
+      usuario.nombre = String(nombre).trim();
+    }
+
+    if (email !== undefined) {
+      const emailNormal = String(email).trim().toLowerCase();
+      if (!emailValido(emailNormal)) return res.status(400).json({ mensaje: 'El email no tiene un formato válido' });
+      if (emailNormal !== usuario.email) {
+        const existe = await Usuario.findOne({ where: { email: emailNormal } });
+        if (existe) return res.status(409).json({ mensaje: 'Ese email ya está en uso' });
+        usuario.email = emailNormal;
       }
+    }
 
-      p.estado = 'devuelto';
-      p.fecha_devolucion = hoy();
-      await p.save({ transaction: t });
-      return p;
+    if (rol !== undefined) {
+      if (!['admin', 'usuario'].includes(rol)) return res.status(400).json({ mensaje: 'Rol no válido' });
+      if (usuario.id === req.usuario.id && rol !== 'admin') {
+        return res.status(400).json({ mensaje: 'No puedes quitarte tu propio rol de administrador' });
+      }
+      usuario.rol = rol;
+    }
+
+    if (password) {
+      if (String(password).length < 6) return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres' });
+      usuario.password = await bcrypt.hash(String(password), 10);
+    }
+
+    await usuario.save();
+    res.json({
+      mensaje: 'Usuario actualizado',
+      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
     });
-
-    res.json({ mensaje: 'Devolución registrada', prestamo });
   } catch (error) {
-    responderError(res, error);
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error del servidor' });
+  }
+};
+
+// DELETE /usuarios/:id (admin)
+exports.eliminar = async (req, res) => {
+  try {
+    const usuario = await Usuario.findByPk(req.params.id);
+    if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+
+    if (usuario.id === req.usuario.id) {
+      return res.status(400).json({ mensaje: 'No puedes eliminar tu propia cuenta' });
+    }
+
+    const prestamos = await Prestamo.count({ where: { usuario_id: usuario.id } });
+    if (prestamos > 0) {
+      return res.status(409).json({ mensaje: 'No se puede eliminar: el usuario tiene préstamos registrados' });
+    }
+
+    await usuario.destroy();
+    res.json({ mensaje: 'Usuario eliminado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error del servidor' });
   }
 };

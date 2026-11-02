@@ -22,7 +22,7 @@ const responderError = (res, error) => {
 const hoy = () => {
   const d = new Date();
   const dos = (n) => String(n).padStart(2, '0');
-  return ${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())};
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
 };
 
 // Código de préstamo con crypto. Ejemplo: A7F3C91D
@@ -72,7 +72,7 @@ exports.crear = async (req, res) => {
       estado: 'pendiente',
     });
 
-    res.status(201).json({ mensaje: Solicitud enviada. Tu código es ${codigo}, prestamo });
+    res.status(201).json({ mensaje: `Solicitud enviada. Tu código es ${codigo}`, prestamo });
   } catch (error) {
     responderError(res, error);
   }
