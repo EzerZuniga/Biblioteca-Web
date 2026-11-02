@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo - Biblioteca</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="contenedor">
+    <div class="encabezado">
+      <div>
+        <h1>Catálogo de libros</h1>
+        <p class="suave">Solicita un libro y espera la aprobación del administrador.</p>
+      </div>
+      <label class="buscador">Buscar por título
+        <input type="search" id="buscar" placeholder="Ej. Clean Code" autocomplete="off">
+      </label>
+    </div>
+    <div class="grid-libros" id="grid" aria-live="polite"></div>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/catalogo.js"></script>
+</body>
+</html>

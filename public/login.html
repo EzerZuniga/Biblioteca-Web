@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión - Biblioteca</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="auth">
+    <section class="auth-lado">
+      <h1>Encuentra tu libro y pídelo desde aquí.</h1>
+      <p>Busca en el catálogo, solicita el préstamo y recógelo cuando un administrador lo apruebe.</p>
+      <p>Cada préstamo recibe un código como este:</p>
+      <span class="codigo">A7F3C91D</span>
+    </section>
+    <section class="auth-form">
+      <form id="formLogin" novalidate>
+        <h2>Inicia sesión</h2>
+        <p id="aviso" class="aviso" hidden>Tu cuenta está lista. Inicia sesión para continuar.</p>
+        <p id="error" class="error" role="alert" hidden></p>
+        <label>Email
+          <input type="email" id="email" autocomplete="username" required>
+        </label>
+        <label>Contraseña
+          <input type="password" id="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn" type="submit" id="btnEntrar">Iniciar sesión</button>
+        <p class="suave">¿No tienes cuenta? <a href="/registro.html">Crea una</a></p>
+      </form>
+    </section>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/login.js"></script>
+</body>
+</html>

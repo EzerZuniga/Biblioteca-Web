@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usuarios - Biblioteca</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="contenedor">
+    <div class="encabezado">
+      <div>
+        <h1>Gestión de usuarios</h1>
+        <p class="suave">Edita datos y roles, o elimina cuentas sin préstamos.</p>
+      </div>
+    </div>
+
+    <section class="panel" id="panelForm" hidden>
+      <h2>Editar usuario</h2>
+      <form id="formUsuario" novalidate>
+        <input type="hidden" id="usuarioId">
+        <div class="fila-form">
+          <label>Nombre <input type="text" id="nombre" maxlength="100" required></label>
+          <label>Email <input type="email" id="email" required></label>
+          <label>Rol
+            <select id="rol">
+              <option value="usuario">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </label>
+          <label>Nueva contraseña (opcional) <input type="password" id="password" autocomplete="new-password" placeholder="Déjala vacía para no cambiarla"></label>
+        </div>
+        <div class="acciones">
+          <button class="btn" type="submit">Guardar cambios</button>
+          <button class="btn btn-secundario" type="button" id="btnCancelar">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/admin-usuarios.js"></script>
+</body>
+</html>

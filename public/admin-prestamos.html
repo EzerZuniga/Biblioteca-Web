@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Préstamos - Biblioteca</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="contenedor">
+    <div class="encabezado">
+      <div>
+        <h1>Préstamos</h1>
+        <p class="suave" id="resumen"></p>
+      </div>
+      <label>Filtrar por estado
+        <select id="filtro">
+          <option value="">Todos</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="prestado">Prestados</option>
+          <option value="devuelto">Devueltos</option>
+        </select>
+      </label>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Código</th><th>Usuario</th><th>Libro</th><th>Estado</th><th>Préstamo</th><th>Devolución</th><th>Acción</th></tr></thead>
+        <tbody id="cuerpo"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/admin-prestamos.js"></script>
+</body>
+</html>

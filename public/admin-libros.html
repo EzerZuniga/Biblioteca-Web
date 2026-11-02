@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Libros - Biblioteca</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <main class="contenedor">
+    <div class="encabezado">
+      <div>
+        <h1>Gestión de libros</h1>
+        <p class="suave">Crea, edita o elimina libros del catálogo.</p>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h2 id="tituloForm">Nuevo libro</h2>
+      <form id="formLibro" novalidate>
+        <input type="hidden" id="libroId">
+        <div class="fila-form">
+          <label>Título <input type="text" id="titulo" maxlength="200" required></label>
+          <label>Autor <input type="text" id="autor" maxlength="150" required></label>
+          <label>Categoría <input type="text" id="categoria" maxlength="100" placeholder="Ej. Novela"></label>
+          <label>Cantidad <input type="number" id="cantidad" min="0" value="1" required></label>
+        </div>
+        <div class="acciones">
+          <button class="btn" type="submit" id="btnGuardar">Crear libro</button>
+          <button class="btn btn-secundario" type="button" id="btnCancelar" hidden>Cancelar edición</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Título</th><th>Autor</th><th>Categoría</th><th>Cantidad</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/admin-libros.js"></script>
+</body>
+</html>
