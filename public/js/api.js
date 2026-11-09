@@ -151,12 +151,31 @@ function formatearFecha(fecha) {
   return `${d}/${m}/${a}`;
 }
 
-function badgeEstado(estado) {
-  const texto =
-    { pendiente: "Pendiente", prestado: "Prestado", devuelto: "Devuelto" }[
-      estado
-    ] || estado;
-  return `<span class="estado estado-${esc(estado)}">${texto}</span>`;
+const TEXTO_ESTADO = {
+  pendiente: "Pendiente",
+  prestado: "Prestado",
+  devuelto: "Devuelto",
+  rechazado: "Rechazado",
+  cancelado: "Cancelado",
+  vencido: "Vencido",
+};
+
+// Un préstamo vencido sigue en estado "prestado"; la API lo marca aparte.
+function badgeEstado(estado, vencido = false) {
+  const clave = vencido ? "vencido" : estado;
+  return `<span class="estado estado-${esc(clave)}">${esc(TEXTO_ESTADO[clave] || clave)}</span>`;
+}
+
+// Línea extra bajo la etiqueta: días de retraso o motivo del rechazo.
+function detalleEstado(prestamo) {
+  if (prestamo.vencido) {
+    const dias = prestamo.diasDeRetraso;
+    return `<br><span class="suave">${dias} ${dias === 1 ? "día" : "días"} de retraso</span>`;
+  }
+  if (prestamo.estado === "rechazado" && prestamo.motivo_rechazo) {
+    return `<br><span class="suave">${esc(prestamo.motivo_rechazo)}</span>`;
+  }
+  return "";
 }
 
 function toast(texto, tipo = "ok") {

@@ -53,3 +53,20 @@ describe("ZONA_HORARIA inválida", () => {
     );
   });
 });
+
+describe("sumarDias y diasEntre", () => {
+  const { sumarDias, diasEntre } = require("../../utils/dates");
+
+  it("cruzan meses, años y febrero bisiesto", () => {
+    assert.equal(sumarDias("2026-11-25", 14), "2026-12-09");
+    assert.equal(sumarDias("2026-12-25", 14), "2027-01-08");
+    assert.equal(sumarDias("2028-02-20", 14), "2028-03-05");
+    assert.equal(sumarDias("2026-03-01", -1), "2026-02-28");
+  });
+
+  it("cuentan los días entre dos fechas", () => {
+    assert.equal(diasEntre("2026-12-25", "2027-01-08"), 14);
+    assert.equal(diasEntre("2026-01-10", "2026-01-10"), 0);
+    assert.equal(diasEntre("2026-01-10", "2026-01-07"), -3);
+  });
+});

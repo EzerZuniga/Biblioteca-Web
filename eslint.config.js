@@ -8,6 +8,7 @@ const COMPARTIDAS_DEL_FRONTEND = [
   "api",
   "badgeEstado",
   "cerrarSesion",
+  "detalleEstado",
   "conConsulta",
   "esc",
   "formatearFecha",

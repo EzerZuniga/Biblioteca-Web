@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Préstamos - Biblioteca</title>
-    <link rel="stylesheet" href="/css/styles.css?v=sesion-cookie" />
+    <link rel="stylesheet" href="/css/styles.css?v=vencimientos" />
   </head>
   <body>
     <main class="contenedor">
@@ -19,7 +19,10 @@
             <option value="">Todos</option>
             <option value="pendiente">Pendientes</option>
             <option value="prestado">Prestados</option>
+            <option value="vencido">Vencidos</option>
             <option value="devuelto">Devueltos</option>
+            <option value="rechazado">Rechazados</option>
+            <option value="cancelado">Cancelados</option>
           </select>
         </label>
       </div>
@@ -32,6 +35,7 @@
               <th>Libro</th>
               <th>Estado</th>
               <th>Préstamo</th>
+              <th>Vence</th>
               <th>Devolución</th>
               <th>Acción</th>
             </tr>
@@ -46,7 +50,7 @@
         hidden
       ></nav>
     </main>
-    <script src="/js/api.js?v=sesion-cookie"></script>
-    <script src="/js/admin-loans.js?v=sesion-cookie"></script>
+    <script src="/js/api.js?v=vencimientos"></script>
+    <script src="/js/admin-loans.js?v=vencimientos"></script>
   </body>
 </html>

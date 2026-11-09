@@ -187,7 +187,7 @@ los mensajes y los comentarios van en español.
 biblioteca-web/
 ├── server.js                    punto de entrada: prepara la base y escucha
 ├── app.js                       arma la app de Express (la usan server.js y los tests)
-├── config/                      db (conexión Sequelize -> MySQL) y session
+├── config/                      db (conexión Sequelize -> MySQL), session y loans
 ├── models/                      User, Book, Loan + relaciones (index.js)
 ├── railway.json                 despliegue: healthcheck, apagado y reinicios
 ├── routes/                      apiV1 (agrupa auth, users, books, loans),
@@ -223,7 +223,25 @@ de forma permanente a las nuevas (`routes/legacyRedirects.js`).
 
 ## Flujo de un préstamo
 
-`pendiente` (usuario solicita, se genera el código con crypto) → `prestado` (admin aprueba) → `devuelto` (admin registra devolución).
+```
+pendiente ──aprobar──▶ prestado ──devolver──▶ devuelto
+    │                     │
+    ├──rechazar (admin)──▶ rechazado      (con motivo opcional)
+    └──cancelar (lector)─▶ cancelado
+```
+
+- **Solicitar.** El lector pide un libro y recibe un código. No puede si tiene
+  un préstamo vencido, si ya tiene ese libro activo o si llegó al máximo de
+  préstamos o solicitudes activas (`MAX_PRESTAMOS_ACTIVOS`, 3 por defecto).
+- **Aprobar.** Fija la fecha de préstamo y la fecha límite, que es esa fecha
+  más `DIAS_PRESTAMO` días (14 por defecto).
+- **Vencido.** No es un estado guardado: un préstamo `prestado` cuya fecha
+  límite ya pasó. La API lo marca con `vencido: true` y `diasDeRetraso`, y se
+  puede filtrar con `?estado=vencido`. Al calcularse al consultar, nunca queda
+  desactualizado.
+- **Rechazar y cancelar.** Solo sobre solicitudes pendientes. Un lector solo
+  cancela las suyas; si intenta cancelar una ajena, la API responde 404 para no
+  revelar que existe.
 
 En `libros`, `cantidad` es el total de ejemplares. Los disponibles se calculan
 como `cantidad` menos los préstamos en estado `prestado`, y la API los devuelve
@@ -238,16 +256,18 @@ clientes, como cambiar la forma de una respuesta, va en una versión nueva. Las
 rutas anteriores sin versión (`/libros`, `/auth`…) responden 410 con un mensaje
 que pide recargar la página.
 
-| Método              | Ruta (bajo `/api/v1`)                           | Quién                             |
-| ------------------- | ----------------------------------------------- | --------------------------------- |
-| POST                | /auth/register, /auth/login, /auth/logout       | Público                           |
-| GET                 | /auth/yo (datos y rol actuales de la sesión)    | Con sesión                        |
-| GET / PUT / DELETE  | /usuarios, /usuarios/:id                        | Admin                             |
-| GET                 | /libros (`?titulo=`)                            | Con sesión                        |
-| POST / PUT / DELETE | /libros, /libros/:id                            | Admin                             |
-| POST                | /prestamos                                      | Usuario                           |
-| GET                 | /prestamos (`?estado=`)                         | Admin: todos · Usuario: los suyos |
-| PUT                 | /prestamos/:id/aprobar, /prestamos/:id/devolver | Admin                             |
+| Método              | Ruta (bajo `/api/v1`)                                | Quién                             |
+| ------------------- | ---------------------------------------------------- | --------------------------------- |
+| POST                | /auth/register, /auth/login, /auth/logout            | Público                           |
+| GET                 | /auth/yo (datos y rol actuales de la sesión)         | Con sesión                        |
+| GET / PUT / DELETE  | /usuarios, /usuarios/:id                             | Admin                             |
+| GET                 | /libros (`?titulo=`)                                 | Con sesión                        |
+| POST / PUT / DELETE | /libros, /libros/:id                                 | Admin                             |
+| POST                | /prestamos                                           | Usuario                           |
+| GET                 | /prestamos (`?estado=`, también `vencido`)           | Admin: todos · Usuario: los suyos |
+| GET                 | /prestamos/resumen (pendientes, prestados, vencidos) | Admin                             |
+| PUT                 | /prestamos/:id/aprobar, /rechazar, /devolver         | Admin                             |
+| PUT                 | /prestamos/:id/cancelar                              | Usuario (solo los suyos)          |
 
 **Paginación.** Los listados (`GET /libros`, `/prestamos` y `/usuarios`) aceptan
 `?pagina=` (desde 1) y `?porPagina=` (de 1 a 100, por defecto 20), y responden:

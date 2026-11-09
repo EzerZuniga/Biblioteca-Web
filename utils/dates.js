@@ -46,4 +46,24 @@ const marcaLocal = (momento = new Date()) => {
   return `${partes.year}${partes.month}${partes.day}-${partes.hour}${partes.minute}`;
 };
 
-module.exports = { fechaLocal, marcaLocal, ZONA_HORARIA };
+// Aritmética de fechas AAAA-MM-DD en UTC: sin horas de por medio, el cambio
+// de horario o la zona del servidor no pueden correr un día.
+const DIA_MS = 24 * 60 * 60 * 1000;
+const aUTC = (fecha) => {
+  const [anio, mes, dia] = fecha.split("-").map(Number);
+  return Date.UTC(anio, mes - 1, dia);
+};
+
+const sumarDias = (fecha, dias) =>
+  new Date(aUTC(fecha) + dias * DIA_MS).toISOString().slice(0, 10);
+
+const diasEntre = (desde, hasta) =>
+  Math.round((aUTC(hasta) - aUTC(desde)) / DIA_MS);
+
+module.exports = {
+  fechaLocal,
+  marcaLocal,
+  sumarDias,
+  diasEntre,
+  ZONA_HORARIA,
+};

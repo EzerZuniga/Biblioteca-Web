@@ -35,8 +35,9 @@ const ESQUEMA_ANTIGUO = `
   -- 1 prestado, y guardaba 2.
   INSERT INTO usuarios (id, nombre, email, password) VALUES (1, 'Lector', 'l@x.com', 'x');
   INSERT INTO libros (id, titulo, autor, cantidad) VALUES (1, 'Con préstamo', 'A', 2), (2, 'Sin préstamo', 'B', 4);
-  INSERT INTO prestamos (usuario_id, libro_id, codigo, estado)
-    VALUES (1, 1, 'AAAA0001', 'prestado'), (1, 2, 'AAAA0002', 'devuelto');`;
+  INSERT INTO prestamos (usuario_id, libro_id, codigo, estado, fecha_prestamo)
+    VALUES (1, 1, 'AAAA0001', 'prestado', '2026-01-01'),
+           (1, 2, 'AAAA0002', 'devuelto', NULL);`;
 
 const ejecutarMigrar = () =>
   new Promise((resolve) => {
@@ -76,6 +77,30 @@ describe("migrar una base antigua", () => {
   it("agrega la versión de sesión a los usuarios", async () => {
     const [usuario] = await bd.consultar("SELECT version_token FROM usuarios");
     assert.equal(usuario.version_token, 0);
+  });
+
+  it("agrega fecha límite, rechazo y cancelación a los préstamos", async () => {
+    const [estado] = await bd.consultar(
+      `SELECT COLUMN_TYPE AS tipo FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prestamos'
+          AND COLUMN_NAME = 'estado'`,
+    );
+    assert.match(estado.tipo, /'rechazado','cancelado'/);
+
+    // La fecha límite de los préstamos existentes sale de su fecha de préstamo.
+    const prestamos = await bd.consultar(
+      "SELECT codigo, fecha_limite, motivo_rechazo FROM prestamos ORDER BY codigo",
+    );
+    assert.deepEqual(prestamos, [
+      { codigo: "AAAA0001", fecha_limite: "2026-01-15", motivo_rechazo: null },
+      { codigo: "AAAA0002", fecha_limite: null, motivo_rechazo: null },
+    ]);
+
+    const indices = await bd.consultar(
+      `SELECT DISTINCT INDEX_NAME AS nombre FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prestamos'`,
+    );
+    assert.ok(indices.some((i) => i.nombre === "idx_prestamos_estado_limite"));
   });
 
   it("reemplaza el borrado en cascada y protege el historial", async () => {
@@ -118,13 +143,16 @@ describe("migrar una base antigua", () => {
 
   it("reconoce los nombres anteriores de los archivos y no las repite", async () => {
     // Así quedó registrado en Railway antes de renombrar los archivos a inglés.
+    // La 004 no estaba registrada: se aplica de nuevo y no debe cambiar nada.
     await bd.consultar("DELETE FROM migraciones");
     await bd.consultar(
       `INSERT INTO migraciones (nombre) VALUES
         ('001-cantidad-es-total.js'), ('002-version-token.js'), ('003-proteger-historial.js')`,
     );
 
-    assert.deepEqual(await migrar(sequelize), []);
+    assert.deepEqual(await migrar(sequelize), [
+      "004-loan-due-dates-and-states.js",
+    ]);
 
     const registradas = await bd.consultar(
       "SELECT nombre FROM migraciones ORDER BY nombre",
@@ -135,8 +163,13 @@ describe("migrar una base antigua", () => {
         "001-quantity-is-total.js",
         "002-token-version.js",
         "003-protect-loan-history.js",
+        "004-loan-due-dates-and-states.js",
       ],
     );
+    const [prestamo] = await bd.consultar(
+      "SELECT fecha_limite FROM prestamos WHERE codigo = 'AAAA0001'",
+    );
+    assert.equal(prestamo.fecha_limite, "2026-01-15");
     const [libro] = await bd.consultar(
       "SELECT cantidad FROM libros WHERE id = 1",
     );

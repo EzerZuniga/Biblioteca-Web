@@ -307,6 +307,15 @@ td.acciones-celda {
   background: var(--ok-bg);
   color: var(--ok);
 }
+.estado-vencido,
+.estado-rechazado {
+  background: var(--peligro-bg);
+  color: var(--peligro);
+}
+.estado-cancelado {
+  background: #e8eaed;
+  color: var(--suave);
+}
 .codigo {
   font-size: 0.92rem;
   letter-spacing: 0.08em;
