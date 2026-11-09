@@ -32,10 +32,7 @@ const bloquearPrestamo = (id, t) =>
   });
 
 const crear = async (req, res) => {
-  const libro_id = Number(req.body.libro_id);
-  if (!Number.isInteger(libro_id) || libro_id < 1) {
-    throw new ErrorNegocio(400, "Indica un libro válido");
-  }
+  const { libro_id } = req.body;
 
   const prestamo = await transaccion(async (t) => {
     // Bloquear la fila del usuario pone en fila sus solicitudes simultáneas

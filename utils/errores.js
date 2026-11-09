@@ -1,8 +1,9 @@
 class ErrorNegocio extends Error {
-  constructor(status, mensaje) {
+  constructor(status, mensaje, errores) {
     super(mensaje);
     this.name = "ErrorNegocio";
     this.status = status;
+    this.errores = errores;
   }
 }
 

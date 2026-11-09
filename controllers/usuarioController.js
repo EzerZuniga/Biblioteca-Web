@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const { Usuario, Prestamo } = require("../models");
-const { emailValido } = require("../utils/validar");
 const {
   ErrorNegocio,
   buscarOFallar,
@@ -23,29 +22,15 @@ const actualizar = async (req, res) => {
   );
   const { nombre, email, rol, password } = req.body;
 
-  if (nombre !== undefined) {
-    if (!String(nombre).trim()) {
-      throw new ErrorNegocio(400, "El nombre no puede estar vacío");
-    }
-    usuario.nombre = String(nombre).trim();
-  }
+  if (nombre !== undefined) usuario.nombre = nombre;
 
-  if (email !== undefined) {
-    const emailNormal = String(email).trim().toLowerCase();
-    if (!emailValido(emailNormal)) {
-      throw new ErrorNegocio(400, "El email no tiene un formato válido");
-    }
-    if (emailNormal !== usuario.email) {
-      const existe = await Usuario.findOne({ where: { email: emailNormal } });
-      if (existe) throw new ErrorNegocio(409, "Ese email ya está en uso");
-      usuario.email = emailNormal;
-    }
+  if (email !== undefined && email !== usuario.email) {
+    const existe = await Usuario.findOne({ where: { email } });
+    if (existe) throw new ErrorNegocio(409, "Ese email ya está en uso");
+    usuario.email = email;
   }
 
   if (rol !== undefined) {
-    if (!["admin", "usuario"].includes(rol)) {
-      throw new ErrorNegocio(400, "Rol no válido");
-    }
     if (usuario.id === req.usuario.id && rol !== "admin") {
       throw new ErrorNegocio(
         400,
@@ -55,14 +40,8 @@ const actualizar = async (req, res) => {
     usuario.rol = rol;
   }
 
-  if (password) {
-    if (String(password).length < 6) {
-      throw new ErrorNegocio(
-        400,
-        "La contraseña debe tener al menos 6 caracteres",
-      );
-    }
-    usuario.password = await bcrypt.hash(String(password), 10);
+  if (password !== undefined) {
+    usuario.password = await bcrypt.hash(password, 10);
     usuario.version_token += 1; // cierra las sesiones abiertas con la clave anterior
   }
 

@@ -128,9 +128,11 @@ biblioteca-web/
 ├── middlewares/auth.js          verificarToken, soloAdmin, soloUsuario
 ├── middlewares/seguridad.js     helmet y límites de intentos
 ├── middlewares/errores.js       manejador central de errores y 404
+├── middlewares/validar.js       aplica los esquemas de validaciones/
+├── validaciones/                esquemas zod: auth, usuarios, libros, prestamos
 ├── controllers/                 auth, usuario, libro, prestamo
 ├── routes/                      auth, usuario, libro, prestamo
-├── utils/validar.js
+├── utils/                       errores y fechas
 ├── database/biblioteca.sql      crea la base vacía (las tablas las crea la app)
 ├── database/migraciones/        cambios de la base, se aplican al arrancar
 ├── database/migrar.js           ejecuta las migraciones pendientes
@@ -173,6 +175,13 @@ Los errores siempre responden `{ "mensaje": "..." }`. Los controladores no
 capturan errores: lanzan `ErrorNegocio(status, mensaje)` y el manejador central
 de `middlewares/errores.js` arma la respuesta. Los errores inesperados responden
 500 sin detalles y quedan registrados con el método y la ruta.
+
+Cada ruta valida su cuerpo, sus parámetros y su búsqueda con un esquema de
+`validaciones/` antes de llegar al controlador. El esquema normaliza los datos,
+por ejemplo quita espacios y pasa el email a minúsculas, y descarta los campos
+que no conoce. Si algo no cumple, la respuesta es 400 e incluye el detalle por
+campo: `{ "mensaje": "...", "errores": [{ "campo": "...", "mensaje": "..." }] }`.
+Los controladores reciben datos ya validados y solo aplican reglas de negocio.
 
 Las fechas de préstamo y devolución usan la zona horaria de la variable
 `ZONA_HORARIA`, que por defecto es `America/Lima`. No dependen del reloj del

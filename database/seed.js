@@ -3,7 +3,7 @@
 // de las variables ADMIN_EMAIL y ADMIN_PASSWORD, o del comando crear-admin.
 const bcrypt = require("bcrypt");
 const { Usuario, Libro } = require("../models");
-const { emailValido, contrasenaSegura } = require("../utils/validar");
+const { adminDesdeEntorno } = require("../validaciones/usuarios");
 
 // En libros, "cantidad" es el total de ejemplares.
 const libros = [
@@ -20,23 +20,23 @@ const libros = [
 async function crearAdminInicial() {
   if ((await Usuario.count({ where: { rol: "admin" } })) > 0) return;
 
-  const email = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-  const password = String(process.env.ADMIN_PASSWORD || "");
-  if (!email || !password) {
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
     console.warn(
       "No hay administrador. Define ADMIN_EMAIL y ADMIN_PASSWORD, o ejecuta npm run crear-admin.",
     );
     return;
   }
-  if (!emailValido(email) || !contrasenaSegura(password)) {
+  const resultado = adminDesdeEntorno();
+  if (!resultado.success) {
     console.warn(
-      "No se creó el administrador: ADMIN_EMAIL no es válido o ADMIN_PASSWORD es débil.",
+      `No se creó el administrador: ${resultado.error.issues[0].message}.`,
     );
     return;
   }
 
+  const { nombre, email, password } = resultado.data;
   await Usuario.create({
-    nombre: String(process.env.ADMIN_NOMBRE || "Administrador").trim(),
+    nombre,
     email,
     password: await bcrypt.hash(password, 10),
     rol: "admin",

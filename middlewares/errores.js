@@ -5,7 +5,9 @@ const rutaNoEncontrada = (req, res) => {
 };
 
 const traducir = (error) => {
-  if (error instanceof ErrorNegocio) return [error.status, error.message];
+  if (error instanceof ErrorNegocio) {
+    return [error.status, error.message, error.errores];
+  }
 
   switch (error.type) {
     case "entity.parse.failed":
@@ -31,8 +33,8 @@ const manejarErrores = (error, req, res, next) => {
 
   const conocido = traducir(error);
   if (conocido) {
-    const [status, mensaje] = conocido;
-    return res.status(status).json({ mensaje });
+    const [status, mensaje, errores] = conocido;
+    return res.status(status).json(errores ? { mensaje, errores } : { mensaje });
   }
 
   console.error(

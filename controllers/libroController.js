@@ -1,6 +1,5 @@
 const { Op } = require("sequelize");
 const { Libro, Prestamo } = require("../models");
-const { enteroNoNegativo } = require("../utils/validar");
 const {
   ErrorNegocio,
   buscarOFallar,
@@ -13,13 +12,13 @@ const {
   transaccion,
 } = require("../services/inventario");
 
-const MENSAJE_CANTIDAD =
-  "La cantidad de ejemplares debe ser un número entero de 0 o más";
+// En LIKE, % y _ son comodines: se escapan para buscar el texto literal.
+const escaparLike = (texto) => texto.replace(/[\\%_]/g, "\\$&");
 
 const listar = async (req, res) => {
   const where = {};
   if (req.query.titulo) {
-    where.titulo = { [Op.like]: `%${req.query.titulo}%` };
+    where.titulo = { [Op.like]: `%${escaparLike(req.query.titulo)}%` };
   }
   const libros = await Libro.findAll({
     where,
@@ -30,21 +29,7 @@ const listar = async (req, res) => {
 };
 
 const crear = async (req, res) => {
-  const { titulo, autor, categoria, cantidad } = req.body;
-
-  if (!titulo || !String(titulo).trim() || !autor || !String(autor).trim()) {
-    throw new ErrorNegocio(400, "El título y el autor son obligatorios");
-  }
-  if (!enteroNoNegativo(cantidad)) {
-    throw new ErrorNegocio(400, MENSAJE_CANTIDAD);
-  }
-
-  const libro = await Libro.create({
-    titulo: String(titulo).trim(),
-    autor: String(autor).trim(),
-    categoria: String(categoria ?? "").trim() || "General",
-    cantidad: Number(cantidad),
-  });
+  const libro = await Libro.create(req.body);
   res
     .status(201)
     .json({ mensaje: "Libro creado", libro: conDisponibles(libro, 0) });
@@ -58,38 +43,15 @@ const actualizar = async (req, res) => {
       "Libro no encontrado",
       { transaction: t, lock: t.LOCK.UPDATE },
     );
-    const { titulo, autor, categoria, cantidad } = req.body;
-
-    if (titulo !== undefined) {
-      if (!String(titulo).trim()) {
-        throw new ErrorNegocio(400, "El título no puede estar vacío");
-      }
-      libro.titulo = String(titulo).trim();
-    }
-    if (autor !== undefined) {
-      if (!String(autor).trim()) {
-        throw new ErrorNegocio(400, "El autor no puede estar vacío");
-      }
-      libro.autor = String(autor).trim();
-    }
-    if (categoria !== undefined) {
-      libro.categoria = String(categoria).trim() || "General";
-    }
-
     const prestados = await contarPrestados(libro.id, t);
-    if (cantidad !== undefined) {
-      if (!enteroNoNegativo(cantidad)) {
-        throw new ErrorNegocio(400, MENSAJE_CANTIDAD);
-      }
-      if (Number(cantidad) < prestados) {
-        throw new ErrorNegocio(
-          409,
-          `Hay ${prestados} ejemplares prestados. El total no puede ser menor que eso.`,
-        );
-      }
-      libro.cantidad = Number(cantidad);
+    if (req.body.cantidad !== undefined && req.body.cantidad < prestados) {
+      throw new ErrorNegocio(
+        409,
+        `Hay ${prestados} ejemplares prestados. El total no puede ser menor que eso.`,
+      );
     }
 
+    libro.set(req.body);
     await libro.save({ transaction: t });
     return conDisponibles(libro, prestados);
   });

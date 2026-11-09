@@ -1,11 +1,7 @@
 require("dotenv").config({ quiet: true });
 const bcrypt = require("bcrypt");
 const { sequelize, Usuario } = require("../models");
-const {
-  emailValido,
-  contrasenaSegura,
-  MIN_LARGO_ADMIN,
-} = require("../utils/validar");
+const { adminDesdeEntorno } = require("../validaciones/usuarios");
 
 const salir = (mensaje) => {
   console.error(mensaje);
@@ -13,22 +9,15 @@ const salir = (mensaje) => {
 };
 
 async function main() {
-  const email = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-  const password = String(process.env.ADMIN_PASSWORD || "");
-  const nombre = String(process.env.ADMIN_NOMBRE || "Administrador").trim();
-
-  if (!email || !password) {
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
     salir(
       "Define ADMIN_EMAIL y ADMIN_PASSWORD como variables de entorno.\n" +
         "Opcional: ADMIN_NOMBRE.",
     );
   }
-  if (!emailValido(email)) salir("ADMIN_EMAIL no tiene un formato válido.");
-  if (!contrasenaSegura(password)) {
-    salir(
-      `ADMIN_PASSWORD debe tener al menos ${MIN_LARGO_ADMIN} caracteres, con letras y números.`,
-    );
-  }
+  const resultado = adminDesdeEntorno();
+  if (!resultado.success) salir(`${resultado.error.issues[0].message}.`);
+  const { nombre, email, password } = resultado.data;
 
   await sequelize.authenticate();
   const hash = await bcrypt.hash(password, 10);
