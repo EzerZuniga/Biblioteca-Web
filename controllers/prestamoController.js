@@ -3,12 +3,8 @@ const { Op } = require("sequelize");
 const { Usuario, Libro, Prestamo } = require("../models");
 const { ErrorNegocio, responderError } = require("../utils/errores");
 const { contarPrestados, transaccion } = require("../services/inventario");
+const { fechaLocal } = require("../utils/fechas");
 
-const hoy = () => {
-  const d = new Date();
-  const dos = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
-};
 
 const generarCodigo = () => crypto.randomBytes(4).toString("hex").toUpperCase();
 
@@ -127,7 +123,7 @@ exports.aprobar = async (req, res) => {
         );
 
       p.estado = "prestado";
-      p.fecha_prestamo = hoy();
+      p.fecha_prestamo = fechaLocal();
       await p.save({ transaction: t });
       return p;
     });
@@ -153,7 +149,7 @@ exports.devolver = async (req, res) => {
         );
 
       p.estado = "devuelto";
-      p.fecha_devolucion = hoy();
+      p.fecha_devolucion = fechaLocal();
       await p.save({ transaction: t });
       return p;
     });

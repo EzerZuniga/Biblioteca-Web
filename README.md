@@ -113,6 +113,10 @@ ejemplares de los que existen.
 
 Los errores siempre responden `{ "mensaje": "..." }`.
 
+Las fechas de préstamo y devolución usan la zona horaria de la variable
+`ZONA_HORARIA`, que por defecto es `America/Lima`. No dependen del reloj del
+servidor, que en Railway está en UTC.
+
 En cada petición con sesión, el servidor lee el usuario desde la base. Si un
 administrador cambia el rol de alguien o elimina su cuenta, el cambio aplica en
 la siguiente petición. Cambiar una contraseña cierra todas las sesiones que se
