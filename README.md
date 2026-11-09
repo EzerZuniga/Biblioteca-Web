@@ -180,13 +180,15 @@ biblioteca-web/
 ├── app.js                       arma la app de Express (la usan server.js y los tests)
 ├── config/db.js                 conexión Sequelize -> MySQL
 ├── models/                      User, Book, Loan + relaciones (index.js)
-├── routes/                      auth, users, books, loans + legacyRedirects
-├── middlewares/                 auth, security, errors, validate
+├── railway.json                 despliegue: healthcheck, apagado y reinicios
+├── routes/                      apiV1 (agrupa auth, users, books, loans),
+│                                health y legacyRedirects
+├── middlewares/                 auth, security, errors, validate, requestLogger
 ├── validators/                  esquemas zod: auth, users, books, loans, common
 ├── controllers/                 auth, user, book, loan
 ├── services/                    lógica de negocio: auth, users, books, loans,
-│                                inventory (ejemplares disponibles)
-├── utils/                       errors y dates
+│                                inventory (ejemplares disponibles), pagination
+├── utils/                       errors, dates, logger, shutdown, serverState
 ├── database/create-database.sql crea la base vacía (las tablas las crea la app)
 ├── database/migrations/         cambios de la base, se aplican al arrancar
 ├── database/migrate.js          ejecuta las migraciones pendientes
@@ -194,7 +196,8 @@ biblioteca-web/
 ├── database/seed.js             libros de ejemplo y administrador inicial
 ├── scripts/                     create-admin, migrate, backup
 ├── test/unit/                   esquemas, errores y fechas (sin base de datos)
-├── test/integration/            API, servicios, páginas y migraciones contra MySQL
+├── test/integration/            API, servicios, páginas, migraciones y el
+│                                servidor real contra MySQL
 ├── test/helpers/                base temporal, cliente HTTP y datos de prueba
 ├── .github/                     CI (workflows/ci.yml) y Dependabot
 └── public/                      frontend
@@ -220,7 +223,12 @@ ejemplares de los que existen.
 
 ## API
 
-| Método              | Ruta                                            | Quién                             |
+Todas las rutas de la API van bajo `/api/v1`. Un cambio que rompa a los
+clientes, como cambiar la forma de una respuesta, va en una versión nueva. Las
+rutas anteriores sin versión (`/libros`, `/auth`…) responden 410 con un mensaje
+que pide recargar la página.
+
+| Método              | Ruta (bajo `/api/v1`)                           | Quién                             |
 | ------------------- | ----------------------------------------------- | --------------------------------- |
 | POST                | /auth/register, /auth/login                     | Público                           |
 | GET                 | /auth/yo (datos y rol actuales de la sesión)    | Con sesión                        |
@@ -228,8 +236,37 @@ ejemplares de los que existen.
 | GET                 | /libros (`?titulo=`)                            | Con sesión                        |
 | POST / PUT / DELETE | /libros, /libros/:id                            | Admin                             |
 | POST                | /prestamos                                      | Usuario                           |
-| GET                 | /prestamos                                      | Admin: todos · Usuario: los suyos |
+| GET                 | /prestamos (`?estado=`)                         | Admin: todos · Usuario: los suyos |
 | PUT                 | /prestamos/:id/aprobar, /prestamos/:id/devolver | Admin                             |
+
+**Paginación.** Los listados (`GET /libros`, `/prestamos` y `/usuarios`) aceptan
+`?pagina=` (desde 1) y `?porPagina=` (de 1 a 100, por defecto 20), y responden:
+
+```json
+{
+  "datos": [],
+  "paginacion": { "pagina": 1, "porPagina": 20, "total": 23, "totalPaginas": 2 }
+}
+```
+
+## Operación
+
+- **Healthcheck.** `GET /health` responde 200 si el proceso está sano y la base
+  contesta, y 503 si no, o si el servidor se está apagando. `railway.json` le
+  dice a Railway que no pase tráfico a un despliegue nuevo hasta que responda
+  200: si una migración falla, la versión anterior sigue atendiendo.
+- **Apagado limpio.** Al recibir SIGTERM (Railway lo envía en cada despliegue),
+  el servidor deja de aceptar conexiones, termina las peticiones en curso,
+  cierra la base y sale. Si algo se cuelga, fuerza la salida a los 10 segundos;
+  Railway espera 15 (`drainingSeconds`) antes de matar el proceso.
+- **Logs.** Con pino: en Railway salen en JSON, una línea por evento; en tu
+  terminal, legibles y con colores. Cada petición a la API queda registrada con
+  su método, ruta, estado y duración, y con un id que también vuelve en la
+  cabecera `X-Request-Id`. Si un usuario reporta un error, ese id lo ubica en
+  los logs. Los tokens y contraseñas nunca se registran. El nivel se ajusta con
+  `LOG_LEVEL` (`debug`, `info`, `warn`, `error`).
+- **Errores fatales.** Una excepción que nadie capturó se registra y el proceso
+  sale con código 1, para que Railway levante uno limpio.
 
 ## Capas
 

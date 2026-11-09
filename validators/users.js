@@ -1,6 +1,15 @@
 const { z } = require("zod");
-const { LIMITES, texto, email, password, sinIndefinidos } = require("./common");
+const {
+  LIMITES,
+  texto,
+  email,
+  password,
+  paginacion,
+  sinIndefinidos,
+} = require("./common");
 const { MIN_PASSWORD } = require("./auth");
+
+const listado = z.object({ ...paginacion });
 
 const actualizar = z
   .object({
@@ -34,4 +43,10 @@ const adminDesdeEntorno = (env = process.env) =>
     nombre: env.ADMIN_NOMBRE || undefined,
   });
 
-module.exports = { actualizar, admin, adminDesdeEntorno, MIN_PASSWORD_ADMIN };
+module.exports = {
+  listado,
+  actualizar,
+  admin,
+  adminDesdeEntorno,
+  MIN_PASSWORD_ADMIN,
+};

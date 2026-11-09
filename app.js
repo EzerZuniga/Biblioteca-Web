@@ -1,6 +1,7 @@
 const path = require("path");
 const express = require("express");
-const { cabeceras, limiteApi } = require("./middlewares/security");
+const { cabeceras } = require("./middlewares/security");
+const registrarPeticiones = require("./middlewares/requestLogger");
 const { rutaNoEncontrada, manejarErrores } = require("./middlewares/errors");
 
 // Solo arma la aplicación de Express, sin abrir puertos ni tocar la base.
@@ -11,6 +12,10 @@ const app = express();
 // IP real del visitante, que es la que usan los límites de intentos.
 app.set("trust proxy", 1);
 
+app.use(registrarPeticiones);
+// El healthcheck va antes de los límites de intentos: Railway lo consulta seguido.
+app.use(require("./routes/healthRoutes"));
+
 // El frontend se sirve desde este mismo dominio, así que no se habilita CORS:
 // otros sitios no pueden llamar a la API desde el navegador.
 app.use(cabeceras);
@@ -19,11 +24,7 @@ app.use(express.json({ limit: "20kb" }));
 app.use(require("./routes/legacyRedirects").router);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(["/auth", "/usuarios", "/libros", "/prestamos"], limiteApi);
-app.use("/auth", require("./routes/authRoutes"));
-app.use("/usuarios", require("./routes/userRoutes"));
-app.use("/libros", require("./routes/bookRoutes"));
-app.use("/prestamos", require("./routes/loanRoutes"));
+app.use("/api/v1", require("./routes/apiV1"));
 
 app.use(rutaNoEncontrada);
 app.use(manejarErrores);

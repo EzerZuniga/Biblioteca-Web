@@ -3,6 +3,9 @@
 require("dotenv").config({ quiet: true });
 const mysql = require("mysql2/promise");
 
+// Sin logs durante los tests; LOG_LEVEL=info los muestra para depurar.
+process.env.LOG_LEVEL ??= "silent";
+
 const HOSTS_LOCALES = ["localhost", "127.0.0.1", "::1"];
 const host = process.env.DB_HOST || "localhost";
 

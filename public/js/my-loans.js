@@ -1,11 +1,14 @@
 if (protegerPagina("usuario")) {
   renderNavbar();
-  cargar();
+  cargar(1);
 }
 
-async function cargar() {
+async function cargar(pagina) {
   try {
-    const prestamos = await api("/prestamos");
+    const { datos: prestamos, paginacion } = await api(
+      conConsulta("/prestamos", { pagina }),
+    );
+    pintarPaginacion($("paginacion"), paginacion, cargar);
     if (!prestamos.length) {
       $("contenido").innerHTML =
         `<div class="vacio"><strong>Todavía no has pedido libros</strong>Busca uno en el <a href="/catalog.html">catálogo</a> y solicita tu primer préstamo.</div>`;

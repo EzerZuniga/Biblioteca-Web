@@ -1,9 +1,10 @@
+let temporizador;
+let paginaActual = 1;
+
 if (protegerPagina("usuario")) {
   renderNavbar();
   iniciar();
 }
-
-let temporizador;
 
 function colorLomo(categoria) {
   let h = 0;
@@ -38,24 +39,27 @@ function pintar(libros, busqueda) {
     .join("");
 }
 
-async function cargar() {
+async function cargar(pagina = paginaActual) {
   const busqueda = $("buscar").value.trim();
   try {
-    const libros = await api(
-      "/libros" + (busqueda ? `?titulo=${encodeURIComponent(busqueda)}` : ""),
+    const { datos, paginacion } = await api(
+      conConsulta("/libros", { titulo: busqueda, pagina }),
     );
-    pintar(libros, busqueda);
+    paginaActual = paginacion.pagina;
+    pintar(datos, busqueda);
+    pintarPaginacion($("paginacion"), paginacion, cargar);
   } catch (error) {
     toast(error.message, "error");
   }
 }
 
 function iniciar() {
-  cargar();
+  cargar(1);
 
+  // Una búsqueda nueva siempre empieza en la primera página.
   $("buscar").addEventListener("input", () => {
     clearTimeout(temporizador);
-    temporizador = setTimeout(cargar, 300);
+    temporizador = setTimeout(() => cargar(1), 300);
   });
 
   $("grid").addEventListener("click", async (e) => {

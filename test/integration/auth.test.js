@@ -14,7 +14,7 @@ const firmar = (datos) =>
 
 describe("POST /auth/register", () => {
   it("crea un lector, normaliza los datos e ignora un rol colado", async () => {
-    const res = await api.post("/auth/register", {
+    const res = await api.post("/api/v1/auth/register", {
       cuerpo: {
         nombre: " Ana ",
         email: " ANA@Prueba.com ",
@@ -31,7 +31,7 @@ describe("POST /auth/register", () => {
 
   it("rechaza un email ya registrado", async () => {
     await crearLector({ email: "repetido@prueba.com" });
-    const res = await api.post("/auth/register", {
+    const res = await api.post("/api/v1/auth/register", {
       cuerpo: {
         nombre: "Otra",
         email: "repetido@prueba.com",
@@ -45,7 +45,7 @@ describe("POST /auth/register", () => {
   it("con registros simultáneos del mismo email crea uno y nunca responde 500", async () => {
     const respuestas = await Promise.all(
       [1, 2, 3].map(() =>
-        api.post("/auth/register", {
+        api.post("/api/v1/auth/register", {
           cuerpo: {
             nombre: "Doble",
             email: "doble@prueba.com",
@@ -59,7 +59,7 @@ describe("POST /auth/register", () => {
   });
 
   it("detalla todos los campos que faltan", async () => {
-    const res = await api.post("/auth/register", { cuerpo: {} });
+    const res = await api.post("/api/v1/auth/register", { cuerpo: {} });
     assert.equal(res.status, 400);
     assert.deepEqual(
       res.body.errores.map((e) => e.campo),
@@ -68,7 +68,7 @@ describe("POST /auth/register", () => {
   });
 
   it("rechaza un nombre más largo que la columna", async () => {
-    const res = await api.post("/auth/register", {
+    const res = await api.post("/api/v1/auth/register", {
       cuerpo: {
         nombre: "x".repeat(101),
         email: "l@prueba.com",
@@ -84,7 +84,7 @@ describe("POST /auth/register", () => {
 describe("POST /auth/login", () => {
   it("devuelve un token y los datos del usuario", async () => {
     const lector = await crearLector();
-    const res = await api.post("/auth/login", {
+    const res = await api.post("/api/v1/auth/login", {
       cuerpo: { email: lector.email.toUpperCase(), password: lector.password },
     });
     assert.equal(res.status, 200);
@@ -98,7 +98,7 @@ describe("POST /auth/login", () => {
 
   it("rechaza una contraseña incorrecta", async () => {
     const lector = await crearLector();
-    const res = await api.post("/auth/login", {
+    const res = await api.post("/api/v1/auth/login", {
       cuerpo: { email: lector.email, password: "incorrecta" },
     });
     assert.equal(res.status, 401);
@@ -106,14 +106,14 @@ describe("POST /auth/login", () => {
   });
 
   it("pide los datos que faltan sin detallar cuál", async () => {
-    const res = await api.post("/auth/login", { cuerpo: {} });
+    const res = await api.post("/api/v1/auth/login", { cuerpo: {} });
     assert.equal(res.status, 400);
     assert.equal(res.body.mensaje, "Ingresa tu email y tu contraseña");
   });
 
   it("responde 400 en JSON a un cuerpo mal formado", async () => {
     const res = await api
-      .post("/auth/login")
+      .post("/api/v1/auth/login")
       .set("Content-Type", "application/json")
       .send("{malo");
     assert.equal(res.status, 400);
@@ -124,19 +124,19 @@ describe("POST /auth/login", () => {
 describe("sesiones", () => {
   it("/auth/yo devuelve el rol actual", async () => {
     const lector = await crearLector();
-    const res = await api.get("/auth/yo", { token: lector.token });
+    const res = await api.get("/api/v1/auth/yo", { token: lector.token });
     assert.equal(res.status, 200);
     assert.equal(res.body.rol, "usuario");
   });
 
   it("sin token pide iniciar sesión, incluso antes de validar el cuerpo", async () => {
-    const res = await api.post("/libros", { cuerpo: { titulo: "" } });
+    const res = await api.post("/api/v1/libros", { cuerpo: { titulo: "" } });
     assert.equal(res.status, 401);
     assert.equal(res.body.mensaje, "Debes iniciar sesión");
   });
 
   it("un token alterado se trata como sesión expirada", async () => {
-    const res = await api.get("/libros", { token: "no.es.valido" });
+    const res = await api.get("/api/v1/libros", { token: "no.es.valido" });
     assert.equal(res.status, 401);
     assert.match(res.body.mensaje, /expiró/);
   });
@@ -144,7 +144,7 @@ describe("sesiones", () => {
   it("toma el rol de la base y no del token", async () => {
     const lector = await crearLector();
     const falso = firmar({ id: lector.id, nombre: "X", rol: "admin", v: 0 });
-    const res = await api.get("/usuarios", { token: falso });
+    const res = await api.get("/api/v1/usuarios", { token: falso });
     assert.equal(res.status, 403);
   });
 
@@ -155,7 +155,7 @@ describe("sesiones", () => {
       nombre: lector.nombre,
       rol: "usuario",
     });
-    const res = await api.get("/libros", { token: antiguo });
+    const res = await api.get("/api/v1/libros", { token: antiguo });
     assert.equal(res.status, 200);
   });
 
@@ -163,9 +163,9 @@ describe("sesiones", () => {
     const admin = await crearAdmin();
     const lector = await crearLector();
     await api
-      .delete(`/usuarios/${lector.id}`, { token: admin.token })
+      .delete(`/api/v1/usuarios/${lector.id}`, { token: admin.token })
       .expect(200);
-    const res = await api.get("/libros", { token: lector.token });
+    const res = await api.get("/api/v1/libros", { token: lector.token });
     assert.equal(res.status, 401);
   });
 
@@ -173,17 +173,17 @@ describe("sesiones", () => {
     const admin = await crearAdmin();
     const otro = await crearAdmin();
     await api
-      .put(`/usuarios/${otro.id}`, {
+      .put(`/api/v1/usuarios/${otro.id}`, {
         token: admin.token,
         cuerpo: { rol: "usuario" },
       })
       .expect(200);
 
     assert.equal(
-      (await api.get("/usuarios", { token: otro.token })).status,
+      (await api.get("/api/v1/usuarios", { token: otro.token })).status,
       403,
     );
-    const yo = await api.get("/auth/yo", { token: otro.token });
+    const yo = await api.get("/api/v1/auth/yo", { token: otro.token });
     assert.equal(yo.body.rol, "usuario");
   });
 
@@ -191,22 +191,22 @@ describe("sesiones", () => {
     const admin = await crearAdmin();
     const lector = await crearLector();
     await api
-      .put(`/usuarios/${lector.id}`, {
+      .put(`/api/v1/usuarios/${lector.id}`, {
         token: admin.token,
         cuerpo: { password: "nuevaClave9" },
       })
       .expect(200);
 
     assert.equal(
-      (await api.get("/libros", { token: lector.token })).status,
+      (await api.get("/api/v1/libros", { token: lector.token })).status,
       401,
     );
-    const login = await api.post("/auth/login", {
+    const login = await api.post("/api/v1/auth/login", {
       cuerpo: { email: lector.email, password: "nuevaClave9" },
     });
     assert.equal(login.status, 200);
     assert.equal(
-      (await api.get("/libros", { token: login.body.token })).status,
+      (await api.get("/api/v1/libros", { token: login.body.token })).status,
       200,
     );
   });

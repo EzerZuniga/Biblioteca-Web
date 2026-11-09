@@ -20,7 +20,7 @@ describe("cabeceras", () => {
 
   it("no habilita CORS para otros sitios", async () => {
     const res = await api
-      .get("/libros")
+      .get("/api/v1/libros")
       .set("Origin", "https://sitio-malicioso.com");
     assert.equal(res.headers["access-control-allow-origin"], undefined);
   });
@@ -37,7 +37,7 @@ describe("límites de intentos", () => {
     const lector = await crearLector();
     const ip = "203.0.113.10";
     const intento = (password, desde = ip) =>
-      api.post("/auth/login", {
+      api.post("/api/v1/auth/login", {
         ip: desde,
         cuerpo: { email: lector.email, password },
       });
@@ -55,7 +55,7 @@ describe("límites de intentos", () => {
   it("los ingresos correctos no gastan intentos", async () => {
     const lector = await crearLector();
     for (let i = 0; i < 12; i++) {
-      const res = await api.post("/auth/login", {
+      const res = await api.post("/api/v1/auth/login", {
         ip: "203.0.113.20",
         cuerpo: { email: lector.email, password: lector.password },
       });
@@ -66,7 +66,7 @@ describe("límites de intentos", () => {
   it("el registro permite 5 cuentas por hora por IP", async () => {
     const estados = [];
     for (let i = 0; i < 6; i++) {
-      const res = await api.post("/auth/register", {
+      const res = await api.post("/api/v1/auth/register", {
         ip: "203.0.113.30",
         cuerpo: {
           nombre: "R",
@@ -82,7 +82,7 @@ describe("límites de intentos", () => {
   it("la API frena más de 300 peticiones por minuto de una IP", async () => {
     const respuestas = await Promise.all(
       Array.from({ length: 305 }, () =>
-        api.get("/libros", { ip: "203.0.113.40" }),
+        api.get("/api/v1/libros", { ip: "203.0.113.40" }),
       ),
     );
     const frenadas = respuestas.filter((r) => r.status === 429).length;
@@ -92,7 +92,7 @@ describe("límites de intentos", () => {
 
 describe("tamaño de la petición", () => {
   it("rechaza cuerpos de más de 20 KB con 413", async () => {
-    const res = await api.post("/auth/login", {
+    const res = await api.post("/api/v1/auth/login", {
       cuerpo: { email: `${"x".repeat(30000)}@a.com`, password: "x" },
     });
     assert.equal(res.status, 413);

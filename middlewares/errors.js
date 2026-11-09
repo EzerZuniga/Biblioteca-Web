@@ -1,4 +1,5 @@
 const { ErrorNegocio } = require("../utils/errors");
+const logger = require("../utils/logger");
 
 const rutaNoEncontrada = (req, res) => {
   res.status(404).json({ mensaje: "Ruta no encontrada" });
@@ -39,9 +40,10 @@ const manejarErrores = (error, req, res, next) => {
       .json(errores ? { mensaje, errores } : { mensaje });
   }
 
-  console.error(
-    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`,
-    error,
+  // req.log trae el id de la petición; el mismo id vuelve en X-Request-Id.
+  (req.log ?? logger).error(
+    { err: error, metodo: req.method, ruta: req.originalUrl },
+    "Error inesperado",
   );
   res.status(500).json({ mensaje: "Error del servidor" });
 };

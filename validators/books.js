@@ -1,5 +1,11 @@
 const { z } = require("zod");
-const { LIMITES, texto, entero, sinIndefinidos } = require("./common");
+const {
+  LIMITES,
+  texto,
+  entero,
+  paginacion,
+  sinIndefinidos,
+} = require("./common");
 
 const titulo = texto("El título", LIMITES.titulo);
 const autor = texto("El autor", LIMITES.autor);
@@ -38,6 +44,7 @@ const busqueda = z.object({
     .trim()
     .max(LIMITES.titulo, { error: "La búsqueda es demasiado larga" })
     .optional(),
+  ...paginacion,
 });
 
 module.exports = { crear, actualizar, busqueda };

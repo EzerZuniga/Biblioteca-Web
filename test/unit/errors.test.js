@@ -26,13 +26,19 @@ const respuestaFalsa = ({ enviada = false } = {}) => {
   return res;
 };
 
-const req = { method: "PUT", originalUrl: "/prestamos/7/aprobar" };
+const peticionFalsa = () => ({
+  method: "PUT",
+  originalUrl: "/api/v1/prestamos/7/aprobar",
+  // pino-http deja en req.log un logger con el id de la petición.
+  log: { error: mock.fn() },
+});
 
 const manejar = (error, opciones) => {
+  const req = peticionFalsa();
   const res = respuestaFalsa(opciones);
   let siguiente;
   manejarErrores(error, req, res, (e) => (siguiente = e));
-  return { res, siguiente };
+  return { req, res, siguiente };
 };
 
 const errorDeSequelize = (name, code) =>
@@ -97,18 +103,23 @@ describe("manejador central de errores", () => {
     );
   });
 
-  it("responde 500 sin detalles y registra el error inesperado", (t) => {
-    const registro = t.mock.method(console, "error", () => {});
+  it("responde 500 sin detalles y registra el error con su petición", () => {
     const error = new TypeError("cannot read properties of undefined");
 
-    const { res } = manejar(error);
+    const { req, res } = manejar(error);
 
     assert.equal(res.statusCode, 500);
     assert.deepEqual(res.body, { mensaje: "Error del servidor" });
-    assert.equal(registro.mock.callCount(), 1);
-    const [contexto, registrado] = registro.mock.calls[0].arguments;
-    assert.match(contexto, /PUT \/prestamos\/7\/aprobar/);
-    assert.equal(registrado, error);
+    assert.equal(req.log.error.mock.callCount(), 1);
+    const [contexto] = req.log.error.mock.calls[0].arguments;
+    assert.equal(contexto.err, error);
+    assert.equal(contexto.metodo, "PUT");
+    assert.equal(contexto.ruta, "/api/v1/prestamos/7/aprobar");
+  });
+
+  it("los errores conocidos no se registran como inesperados", () => {
+    const { req } = manejar(new NoEncontrado("no está"));
+    assert.equal(req.log.error.mock.callCount(), 0);
   });
 
   it("delega en Express si la respuesta ya salió", () => {

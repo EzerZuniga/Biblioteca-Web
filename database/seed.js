@@ -4,6 +4,7 @@
 const { Libro } = require("../models");
 const { adminDesdeEntorno } = require("../validators/users");
 const { guardarAdmin, hayAdmin } = require("../services/users");
+const logger = require("../utils/logger");
 
 // En libros, "cantidad" es el total de ejemplares.
 const libros = [
@@ -61,27 +62,28 @@ async function crearAdminInicial() {
   if (await hayAdmin()) return;
 
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-    console.warn(
-      "No hay administrador. Define ADMIN_EMAIL y ADMIN_PASSWORD, o ejecuta npm run create-admin.",
+    logger.warn(
+      "No hay administrador. Define ADMIN_EMAIL y ADMIN_PASSWORD, o ejecuta npm run create-admin",
     );
     return;
   }
   const resultado = adminDesdeEntorno();
   if (!resultado.success) {
-    console.warn(
-      `No se creó el administrador: ${resultado.error.issues[0].message}.`,
+    logger.warn(
+      { motivo: resultado.error.issues[0].message },
+      "No se creó el administrador inicial",
     );
     return;
   }
 
   await guardarAdmin(resultado.data, { cambiarNombre: false });
-  console.log(`Administrador inicial creado: ${resultado.data.email}`);
+  logger.info({ email: resultado.data.email }, "Administrador inicial creado");
 }
 
 async function seed() {
   if ((await Libro.count()) === 0) {
     await Libro.bulkCreate(libros);
-    console.log("Libros iniciales creados");
+    logger.info({ libros: libros.length }, "Libros iniciales creados");
   }
   await crearAdminInicial();
 }

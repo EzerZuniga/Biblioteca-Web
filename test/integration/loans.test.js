@@ -17,14 +17,14 @@ const hoyEnLima = () =>
   new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 const solicitar = (lector, libroId) =>
-  api.post("/prestamos", {
+  api.post("/api/v1/prestamos", {
     token: lector.token,
     cuerpo: { libro_id: libroId },
   });
 
 const disponibles = async (token, libroId) => {
-  const res = await api.get("/libros", { token });
-  return res.body.find((l) => l.id === libroId).disponibles;
+  const res = await api.get("/api/v1/libros", { token });
+  return res.body.datos.find((l) => l.id === libroId).disponibles;
 };
 
 describe("flujo de un préstamo", () => {
@@ -39,14 +39,14 @@ describe("flujo de un préstamo", () => {
     assert.match(solicitud.body.prestamo.codigo, /^[0-9A-F]{8}$/);
     const id = solicitud.body.prestamo.id;
 
-    const aprobado = await api.put(`/prestamos/${id}/aprobar`, {
+    const aprobado = await api.put(`/api/v1/prestamos/${id}/aprobar`, {
       token: admin.token,
     });
     assert.equal(aprobado.status, 200);
     assert.equal(aprobado.body.prestamo.fecha_prestamo, hoyEnLima());
     assert.equal(await disponibles(lector.token, libro.id), 0);
 
-    const devuelto = await api.put(`/prestamos/${id}/devolver`, {
+    const devuelto = await api.put(`/api/v1/prestamos/${id}/devolver`, {
       token: admin.token,
     });
     assert.equal(devuelto.status, 200);
@@ -63,15 +63,18 @@ describe("flujo de un préstamo", () => {
     const id = body.prestamo.id;
 
     assert.equal(
-      (await api.put(`/prestamos/${id}/devolver`, { token: admin.token }))
-        .status,
+      (
+        await api.put(`/api/v1/prestamos/${id}/devolver`, {
+          token: admin.token,
+        })
+      ).status,
       400,
     );
     await api
-      .put(`/prestamos/${id}/aprobar`, { token: admin.token })
+      .put(`/api/v1/prestamos/${id}/aprobar`, { token: admin.token })
       .expect(200);
     assert.equal(
-      (await api.put(`/prestamos/${id}/aprobar`, { token: admin.token }))
+      (await api.put(`/api/v1/prestamos/${id}/aprobar`, { token: admin.token }))
         .status,
       400,
     );
@@ -124,9 +127,12 @@ describe("solicitudes", () => {
 
     assert.equal((await solicitar(admin, libro.id)).status, 403);
     const { body } = await solicitar(lector, libro.id);
-    const aprobar = await api.put(`/prestamos/${body.prestamo.id}/aprobar`, {
-      token: lector.token,
-    });
+    const aprobar = await api.put(
+      `/api/v1/prestamos/${body.prestamo.id}/aprobar`,
+      {
+        token: lector.token,
+      },
+    );
     assert.equal(aprobar.status, 403);
   });
 });
@@ -142,7 +148,7 @@ describe("aprobaciones", () => {
 
     const respuestas = await Promise.all(
       ids.map((id) =>
-        api.put(`/prestamos/${id}/aprobar`, { token: admin.token }),
+        api.put(`/api/v1/prestamos/${id}/aprobar`, { token: admin.token }),
       ),
     );
     assert.deepEqual(respuestas.map((r) => r.status).sort(), [200, 400]);
@@ -150,7 +156,7 @@ describe("aprobaciones", () => {
 
   it("responde 404 si el préstamo no existe", async () => {
     const admin = await crearAdmin();
-    const res = await api.put("/prestamos/999999/aprobar", {
+    const res = await api.put("/api/v1/prestamos/999999/aprobar", {
       token: admin.token,
     });
     assert.equal(res.status, 404);
@@ -167,12 +173,12 @@ describe("GET /prestamos", () => {
     await solicitar(ana, libro.id);
     await solicitar(beto, libro.id);
 
-    const deAna = await api.get("/prestamos", { token: ana.token });
+    const deAna = await api.get("/api/v1/prestamos", { token: ana.token });
     assert.deepEqual(
-      deAna.body.map((p) => p.Usuario.id),
+      deAna.body.datos.map((p) => p.Usuario.id),
       [ana.id],
     );
-    const todos = await api.get("/prestamos", { token: admin.token });
-    assert.equal(todos.body.length, 2);
+    const todos = await api.get("/api/v1/prestamos", { token: admin.token });
+    assert.equal(todos.body.datos.length, 2);
   });
 });

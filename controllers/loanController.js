@@ -10,7 +10,7 @@ const crear = async (req, res) => {
 };
 
 const listar = async (req, res) => {
-  res.json(await prestamos.listarPara(req.usuario));
+  res.json(await prestamos.listarPara(req.usuario, req.query));
 };
 
 const aprobar = async (req, res) => {

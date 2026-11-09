@@ -8,6 +8,7 @@ const {
   buscarOFallar,
 } = require("../utils/errors");
 const { contarPrestados, transaccion } = require("./inventory");
+const { paginar } = require("./pagination");
 const { fechaLocal } = require("../utils/dates");
 
 const ESTADOS_ACTIVOS = ["pendiente", "prestado"];
@@ -78,15 +79,23 @@ const solicitar = (usuarioId, libroId) =>
     );
   });
 
-const listarPara = (usuario) =>
-  Prestamo.findAll({
-    where: usuario.rol === "admin" ? {} : { usuario_id: usuario.id },
-    include: [
-      { model: Libro, attributes: ["id", "titulo", "autor"] },
-      { model: Usuario, attributes: ["id", "nombre", "email"] },
-    ],
-    order: [["id", "DESC"]],
-  });
+// El admin ve todos los préstamos; un lector, solo los suyos.
+const listarPara = (usuario, { estado, ...pagina } = {}) =>
+  paginar(
+    Prestamo,
+    {
+      where: {
+        ...(usuario.rol !== "admin" && { usuario_id: usuario.id }),
+        ...(estado && { estado }),
+      },
+      include: [
+        { model: Libro, attributes: ["id", "titulo", "autor"] },
+        { model: Usuario, attributes: ["id", "nombre", "email"] },
+      ],
+      order: [["id", "DESC"]],
+    },
+    pagina,
+  );
 
 const aprobar = (id) =>
   transaccion(async (t) => {

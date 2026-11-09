@@ -2,7 +2,7 @@ const usuarios = require("../services/users");
 const { capturarErrores } = require("../utils/errors");
 
 const listar = async (req, res) => {
-  res.json(await usuarios.listar());
+  res.json(await usuarios.listar(req.query));
 };
 
 const actualizar = async (req, res) => {

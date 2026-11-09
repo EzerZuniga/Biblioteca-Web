@@ -40,6 +40,18 @@ function protegerPagina(rolRequerido) {
   return true;
 }
 
+const BASE_API = "/api/v1";
+
+// Arma "/ruta?clave=valor" omitiendo los parámetros vacíos.
+function conConsulta(ruta, parametros = {}) {
+  const consulta = new URLSearchParams(
+    Object.entries(parametros).filter(
+      ([, valor]) => valor !== undefined && valor !== null && valor !== "",
+    ),
+  );
+  return consulta.size ? `${ruta}?${consulta}` : ruta;
+}
+
 async function api(ruta, metodo = "GET", cuerpo = null) {
   const opciones = {
     method: metodo,
@@ -50,7 +62,7 @@ async function api(ruta, metodo = "GET", cuerpo = null) {
 
   let respuesta;
   try {
-    respuesta = await fetch(ruta, opciones);
+    respuesta = await fetch(BASE_API + ruta, opciones);
   } catch {
     throw new Error("No se pudo conectar con el servidor");
   }
@@ -71,7 +83,7 @@ async function api(ruta, metodo = "GET", cuerpo = null) {
 // navegador quedó viejo. Se consulta el actual y se lleva al usuario a su inicio.
 async function revisarRol() {
   try {
-    const respuesta = await fetch("/auth/yo", {
+    const respuesta = await fetch(`${BASE_API}/auth/yo`, {
       headers: { Authorization: `Bearer ${getToken()}` },
     });
     if (!respuesta.ok) return;
@@ -83,6 +95,33 @@ async function revisarRol() {
   } catch {
     // Sin conexión: se muestra el error original.
   }
+}
+
+// Dibuja "Anterior · Página X de Y · Siguiente" bajo un listado paginado.
+// Se oculta si todo cabe en una página.
+function pintarPaginacion(contenedor, paginacion, irAPagina) {
+  const { pagina, totalPaginas, total } = paginacion;
+  contenedor.replaceChildren();
+  contenedor.hidden = totalPaginas <= 1;
+  if (contenedor.hidden) return;
+
+  const boton = (texto, destino, deshabilitado) => {
+    const elemento = document.createElement("button");
+    elemento.type = "button";
+    elemento.className = "btn btn-secundario btn-chico";
+    elemento.textContent = texto;
+    elemento.disabled = deshabilitado;
+    elemento.addEventListener("click", () => irAPagina(destino));
+    return elemento;
+  };
+  const resumen = document.createElement("span");
+  resumen.textContent = `Página ${pagina} de ${totalPaginas} · ${total} en total`;
+
+  contenedor.append(
+    boton("Anterior", pagina - 1, pagina <= 1),
+    resumen,
+    boton("Siguiente", pagina + 1, pagina >= totalPaginas),
+  );
 }
 
 function esc(valor) {

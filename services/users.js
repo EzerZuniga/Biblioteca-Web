@@ -5,6 +5,7 @@ const {
   Conflicto,
   buscarOFallar,
 } = require("../utils/errors");
+const { paginar } = require("./pagination");
 
 const RONDAS_BCRYPT = 10;
 
@@ -20,11 +21,15 @@ const exigirEmailLibre = async (
   if (existe) throw new Conflicto(mensaje);
 };
 
-const listar = () =>
-  Usuario.findAll({
-    attributes: { exclude: ["password", "version_token"] },
-    order: [["id", "ASC"]],
-  });
+const listar = (pagina = {}) =>
+  paginar(
+    Usuario,
+    {
+      attributes: { exclude: ["password", "version_token"] },
+      order: [["id", "ASC"]],
+    },
+    pagina,
+  );
 
 const actualizar = async (id, cambios, { actorId }) => {
   const usuario = await buscarOFallar(Usuario, id, "Usuario no encontrado");

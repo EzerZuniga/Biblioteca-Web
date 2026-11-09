@@ -17,7 +17,7 @@ const {
 router.use(verificarToken);
 
 router.post("/", soloUsuario, validar({ body: esquemas.crear }), crear);
-router.get("/", listar); // admin: todos | usuario: los suyos
+router.get("/", validar({ query: esquemas.listado }), listar); // admin: todos | usuario: los suyos
 router.put("/:id/aprobar", soloAdmin, validar({ params: paramId }), aprobar);
 router.put("/:id/devolver", soloAdmin, validar({ params: paramId }), devolver);
 

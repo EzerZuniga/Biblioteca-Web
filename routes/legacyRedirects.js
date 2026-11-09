@@ -16,4 +16,14 @@ router.get(Object.keys(PAGINAS_RENOMBRADAS), (req, res) => {
   res.redirect(301, PAGINAS_RENOMBRADAS[req.path] + consulta);
 });
 
-module.exports = { router, PAGINAS_RENOMBRADAS };
+// La API pasó a /api/v1. Una pestaña abierta con el JavaScript anterior
+// recibe un mensaje claro en lugar de un 404.
+const API_ANTERIOR = ["/auth", "/usuarios", "/libros", "/prestamos"];
+
+router.use(API_ANTERIOR, (req, res) => {
+  res.status(410).json({
+    mensaje: "La aplicación se actualizó. Recarga la página para continuar.",
+  });
+});
+
+module.exports = { router, PAGINAS_RENOMBRADAS, API_ANTERIOR };

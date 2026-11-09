@@ -11,7 +11,7 @@ const {
 
 router.use(verificarToken, soloAdmin);
 
-router.get("/", listar);
+router.get("/", validar({ query: esquemas.listado }), listar);
 router.put(
   "/:id",
   validar({ params: paramId, body: esquemas.actualizar }),

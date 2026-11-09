@@ -1,4 +1,5 @@
 let usuarios = [];
+let paginaActual = 1;
 const yo = getUsuario();
 
 if (protegerPagina("admin")) {
@@ -6,10 +7,19 @@ if (protegerPagina("admin")) {
   cargar();
 }
 
-async function cargar() {
+async function cargar(pagina = paginaActual) {
   try {
-    usuarios = await api("/usuarios");
+    const { datos, paginacion } = await api(
+      conConsulta("/usuarios", { pagina }),
+    );
+    // Si se eliminó el último usuario de la página, se vuelve a la anterior.
+    if (!datos.length && paginacion.pagina > 1) {
+      return cargar(paginacion.pagina - 1);
+    }
+    usuarios = datos;
+    paginaActual = paginacion.pagina;
     pintar();
+    pintarPaginacion($("paginacion"), paginacion, cargar);
   } catch (error) {
     toast(error.message, "error");
   }

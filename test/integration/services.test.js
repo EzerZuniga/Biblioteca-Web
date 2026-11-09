@@ -105,7 +105,7 @@ describe("servicios de libros y préstamos", () => {
     await assert.rejects(prestamos.solicitar(lector.id, libro.id), E.Conflicto);
 
     await prestamos.aprobar(prestamo.id);
-    assert.equal((await libros.listar())[0].disponibles, 0);
+    assert.equal((await libros.listar()).datos[0].disponibles, 0);
     await assert.rejects(
       libros.actualizar(libro.id, { cantidad: 0 }),
       E.Conflicto,
@@ -114,7 +114,7 @@ describe("servicios de libros y préstamos", () => {
     await assert.rejects(prestamos.aprobar(prestamo.id), E.SolicitudInvalida);
 
     await prestamos.devolver(prestamo.id);
-    assert.equal((await libros.listar())[0].disponibles, 1);
+    assert.equal((await libros.listar()).datos[0].disponibles, 1);
     await assert.rejects(prestamos.devolver(999999), E.NoEncontrado);
   });
 
@@ -126,11 +126,11 @@ describe("servicios de libros y préstamos", () => {
     await prestamos.solicitar(beto.id, libro.id);
 
     assert.equal(
-      (await prestamos.listarPara({ id: ana.id, rol: "usuario" })).length,
+      (await prestamos.listarPara({ id: ana.id, rol: "usuario" })).datos.length,
       1,
     );
     assert.equal(
-      (await prestamos.listarPara({ id: 0, rol: "admin" })).length,
+      (await prestamos.listarPara({ id: 0, rol: "admin" })).datos.length,
       2,
     );
   });

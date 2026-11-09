@@ -70,12 +70,27 @@ const sinIndefinidos = (datos) =>
     Object.entries(datos).filter(([, valor]) => valor !== undefined),
   );
 
+const POR_PAGINA = { porDefecto: 20, maximo: 100 };
+
+// Campos de consulta comunes a todos los listados: ?pagina=2&porPagina=50
+const paginacion = {
+  pagina: entero("La página debe ser un número entero de 1 o más", {
+    min: 1,
+  }).default(1),
+  porPagina: entero(
+    `porPagina debe ser un número entero entre 1 y ${POR_PAGINA.maximo}`,
+    { min: 1, max: POR_PAGINA.maximo },
+  ).default(POR_PAGINA.porDefecto),
+};
+
 module.exports = {
   LIMITES,
+  POR_PAGINA,
   texto,
   email,
   password,
   entero,
   paramId,
+  paginacion,
   sinIndefinidos,
 };

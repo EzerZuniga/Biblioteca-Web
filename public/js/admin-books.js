@@ -1,14 +1,22 @@
 let libros = [];
+let paginaActual = 1;
 
 if (protegerPagina("admin")) {
   renderNavbar();
   cargar();
 }
 
-async function cargar() {
+async function cargar(pagina = paginaActual) {
   try {
-    libros = await api("/libros");
+    const { datos, paginacion } = await api(conConsulta("/libros", { pagina }));
+    // Si se eliminó el último libro de la página, se vuelve a la anterior.
+    if (!datos.length && paginacion.pagina > 1) {
+      return cargar(paginacion.pagina - 1);
+    }
+    libros = datos;
+    paginaActual = paginacion.pagina;
     pintar();
+    pintarPaginacion($("paginacion"), paginacion, cargar);
   } catch (error) {
     toast(error.message, "error");
   }

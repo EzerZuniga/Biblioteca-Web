@@ -21,13 +21,13 @@ describe("GET /libros", () => {
     const libro = await crearLibro({ cantidad: 3 });
     await prestar(libro.id);
 
-    const res = await api.get("/libros", { token: lector.token });
+    const res = await api.get("/api/v1/libros", { token: lector.token });
     assert.equal(res.status, 200);
     assert.deepEqual(
       {
-        cantidad: res.body[0].cantidad,
-        prestados: res.body[0].prestados,
-        disponibles: res.body[0].disponibles,
+        cantidad: res.body.datos[0].cantidad,
+        prestados: res.body.datos[0].prestados,
+        disponibles: res.body.datos[0].disponibles,
       },
       { cantidad: 3, prestados: 1, disponibles: 2 },
     );
@@ -39,25 +39,28 @@ describe("GET /libros", () => {
     await crearLibro({ titulo: "Otro libro" });
 
     const porcentaje = await api.get(
-      `/libros?titulo=${encodeURIComponent("%")}`,
+      `/api/v1/libros?titulo=${encodeURIComponent("%")}`,
       {
         token: lector.token,
       },
     );
     assert.deepEqual(
-      porcentaje.body.map((l) => l.id),
+      porcentaje.body.datos.map((l) => l.id),
       [raro.id],
     );
 
-    const guion = await api.get(`/libros?titulo=${encodeURIComponent("_")}`, {
-      token: lector.token,
-    });
-    assert.deepEqual(guion.body, []);
+    const guion = await api.get(
+      `/api/v1/libros?titulo=${encodeURIComponent("_")}`,
+      {
+        token: lector.token,
+      },
+    );
+    assert.deepEqual(guion.body.datos, []);
   });
 
   it("rechaza una búsqueda repetida en la URL", async () => {
     const lector = await crearLector();
-    const res = await api.get("/libros?titulo=a&titulo=b", {
+    const res = await api.get("/api/v1/libros?titulo=a&titulo=b", {
       token: lector.token,
     });
     assert.equal(res.status, 400);
@@ -67,7 +70,7 @@ describe("GET /libros", () => {
 describe("POST /libros", () => {
   it("crea con la cantidad enviada como texto y categoría General", async () => {
     const admin = await crearAdmin();
-    const res = await api.post("/libros", {
+    const res = await api.post("/api/v1/libros", {
       token: admin.token,
       cuerpo: { titulo: " Nuevo ", autor: "Z", categoria: "", cantidad: "2" },
     });
@@ -79,7 +82,7 @@ describe("POST /libros", () => {
 
   it("solo lo puede hacer un administrador", async () => {
     const lector = await crearLector();
-    const res = await api.post("/libros", {
+    const res = await api.post("/api/v1/libros", {
       token: lector.token,
       cuerpo: { titulo: "T", autor: "A", cantidad: 1 },
     });
@@ -91,7 +94,7 @@ describe("PUT /libros/:id", () => {
   it("editar solo el título conserva la categoría y la cantidad", async () => {
     const admin = await crearAdmin();
     const libro = await crearLibro({ categoria: "Ensayo", cantidad: 2 });
-    const res = await api.put(`/libros/${libro.id}`, {
+    const res = await api.put(`/api/v1/libros/${libro.id}`, {
       token: admin.token,
       cuerpo: { titulo: "Título nuevo" },
     });
@@ -105,7 +108,7 @@ describe("PUT /libros/:id", () => {
     const libro = await crearLibro({ cantidad: 1 });
     await prestar(libro.id);
 
-    const res = await api.put(`/libros/${libro.id}`, {
+    const res = await api.put(`/api/v1/libros/${libro.id}`, {
       token: admin.token,
       cuerpo: {
         titulo: "Corregido",
@@ -123,7 +126,7 @@ describe("PUT /libros/:id", () => {
     const libro = await crearLibro({ cantidad: 1 });
     await prestar(libro.id);
 
-    const res = await api.put(`/libros/${libro.id}`, {
+    const res = await api.put(`/api/v1/libros/${libro.id}`, {
       token: admin.token,
       cuerpo: { cantidad: 0 },
     });
@@ -132,14 +135,14 @@ describe("PUT /libros/:id", () => {
 
   it("valida el id de la URL y responde 404 si no existe", async () => {
     const admin = await crearAdmin();
-    const invalido = await api.put("/libros/abc", {
+    const invalido = await api.put("/api/v1/libros/abc", {
       token: admin.token,
       cuerpo: {},
     });
     assert.equal(invalido.status, 400);
     assert.equal(invalido.body.mensaje, "El identificador no es válido");
 
-    const inexistente = await api.put("/libros/999999", {
+    const inexistente = await api.put("/api/v1/libros/999999", {
       token: admin.token,
       cuerpo: {},
     });
@@ -152,7 +155,9 @@ describe("DELETE /libros/:id", () => {
   it("elimina un libro sin préstamos", async () => {
     const admin = await crearAdmin();
     const libro = await crearLibro();
-    const res = await api.delete(`/libros/${libro.id}`, { token: admin.token });
+    const res = await api.delete(`/api/v1/libros/${libro.id}`, {
+      token: admin.token,
+    });
     assert.equal(res.status, 200);
   });
 
@@ -160,7 +165,9 @@ describe("DELETE /libros/:id", () => {
     const admin = await crearAdmin();
     const libro = await crearLibro();
     await prestar(libro.id);
-    const res = await api.delete(`/libros/${libro.id}`, { token: admin.token });
+    const res = await api.delete(`/api/v1/libros/${libro.id}`, {
+      token: admin.token,
+    });
     assert.equal(res.status, 409);
   });
 });

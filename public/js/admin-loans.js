@@ -1,37 +1,48 @@
 let prestamos = [];
+let paginaActual = 1;
 
 if (protegerPagina("admin")) {
   renderNavbar();
   cargar();
 }
 
-async function cargar() {
+// El filtro se aplica en el servidor: con paginación, el navegador no tiene
+// todos los préstamos. El total de pendientes sale de una consulta aparte.
+async function cargar(pagina = paginaActual) {
   try {
-    prestamos = await api("/prestamos");
+    const [listado, pendientes] = await Promise.all([
+      api(conConsulta("/prestamos", { estado: $("filtro").value, pagina })),
+      api(conConsulta("/prestamos", { estado: "pendiente", porPagina: 1 })),
+    ]);
+    const { datos, paginacion } = listado;
+    // Si la página quedó vacía (por ejemplo, tras aprobar), se vuelve atrás.
+    if (!datos.length && paginacion.pagina > 1) {
+      return cargar(paginacion.pagina - 1);
+    }
+    prestamos = datos;
+    paginaActual = paginacion.pagina;
+    pintarResumen(pendientes.paginacion.total);
     pintar();
+    pintarPaginacion($("paginacion"), paginacion, cargar);
   } catch (error) {
     toast(error.message, "error");
   }
 }
 
-function pintar() {
-  const pendientes = prestamos.filter((p) => p.estado === "pendiente").length;
+function pintarResumen(pendientes) {
   $("resumen").textContent = pendientes
     ? `${pendientes} ${pendientes === 1 ? "solicitud espera" : "solicitudes esperan"} tu aprobación`
     : "No hay solicitudes pendientes";
+}
 
-  const filtro = $("filtro").value;
-  const lista = filtro
-    ? prestamos.filter((p) => p.estado === filtro)
-    : prestamos;
-
-  if (!lista.length) {
+function pintar() {
+  if (!prestamos.length) {
     $("cuerpo").innerHTML =
       `<tr><td colspan="7"><div class="vacio"><strong>No hay préstamos para mostrar</strong>Cuando un usuario solicite un libro, aparecerá aquí.</div></td></tr>`;
     return;
   }
 
-  $("cuerpo").innerHTML = lista
+  $("cuerpo").innerHTML = prestamos
     .map((p) => {
       let accion = '<span class="suave">—</span>';
       if (p.estado === "pendiente") {
@@ -53,7 +64,7 @@ function pintar() {
     .join("");
 }
 
-$("filtro").addEventListener("change", pintar);
+$("filtro").addEventListener("change", () => cargar(1));
 
 $("cuerpo").addEventListener("click", async (e) => {
   const boton = e.target.closest("button[data-accion]");
