@@ -1,5 +1,5 @@
-const libros = require("../services/libros");
-const { capturarErrores } = require("../utils/errores");
+const libros = require("../services/books");
+const { capturarErrores } = require("../utils/errors");
 
 const listar = async (req, res) => {
   res.json(await libros.listar(req.query));

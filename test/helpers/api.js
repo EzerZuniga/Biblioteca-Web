@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../../aplicacion");
+const app = require("../../app");
 
 // Cada petición sale de una IP distinta para que los límites de intentos no
 // interfieran entre tests. Los tests de seguridad fijan la IP a propósito.

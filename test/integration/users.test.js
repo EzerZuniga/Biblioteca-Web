@@ -1,9 +1,9 @@
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const api = require("../ayudantes/api");
-const { crearLector, crearAdmin, crearLibro } = require("../ayudantes/datos");
-const prestamos = require("../../services/prestamos");
+const api = require("../helpers/api");
+const { crearLector, crearAdmin, crearLibro } = require("../helpers/fixtures");
+const prestamos = require("../../services/loans");
 
 before(() => bd.crearBaseDePrueba());
 after(() => bd.borrarBaseDePrueba());
@@ -86,7 +86,9 @@ describe("PUT /usuarios/:id", () => {
 describe("DELETE /usuarios/:id", () => {
   it("un admin no puede eliminarse a sí mismo", async () => {
     const admin = await crearAdmin();
-    const res = await api.delete(`/usuarios/${admin.id}`, { token: admin.token });
+    const res = await api.delete(`/usuarios/${admin.id}`, {
+      token: admin.token,
+    });
     assert.equal(res.status, 400);
   });
 
@@ -96,7 +98,9 @@ describe("DELETE /usuarios/:id", () => {
     const libro = await crearLibro();
     await prestamos.solicitar(lector.id, libro.id);
 
-    const res = await api.delete(`/usuarios/${lector.id}`, { token: admin.token });
+    const res = await api.delete(`/usuarios/${lector.id}`, {
+      token: admin.token,
+    });
     assert.equal(res.status, 409);
   });
 });

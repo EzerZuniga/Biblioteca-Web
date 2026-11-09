@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { LIMITES, texto, email, password } = require("./comunes");
+const { LIMITES, texto, email, password } = require("./common");
 
 const MIN_PASSWORD = 6;
 

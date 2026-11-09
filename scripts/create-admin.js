@@ -1,7 +1,7 @@
 require("dotenv").config({ quiet: true });
 const { sequelize } = require("../models");
-const { adminDesdeEntorno } = require("../validaciones/usuarios");
-const { guardarAdmin } = require("../services/usuarios");
+const { adminDesdeEntorno } = require("../validators/users");
+const { guardarAdmin } = require("../services/users");
 
 const salir = (mensaje) => {
   console.error(mensaje);

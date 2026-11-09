@@ -1,10 +1,10 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const auth = require("../../validaciones/auth");
-const libros = require("../../validaciones/libros");
-const usuarios = require("../../validaciones/usuarios");
-const prestamos = require("../../validaciones/prestamos");
-const { paramId } = require("../../validaciones/comunes");
+const auth = require("../../validators/auth");
+const libros = require("../../validators/books");
+const usuarios = require("../../validators/users");
+const prestamos = require("../../validators/loans");
+const { paramId } = require("../../validators/common");
 
 const valido = (esquema, dato) => {
   const resultado = esquema.safeParse(dato);
@@ -39,11 +39,23 @@ describe("esquema de registro", () => {
       [{ ...base, nombre: undefined }, "El nombre es obligatorio"],
       [{ ...base, nombre: "   " }, "El nombre no puede estar vacío"],
       [{ ...base, nombre: 123 }, "El nombre debe ser texto"],
-      [{ ...base, nombre: "x".repeat(101) }, "El nombre admite como máximo 100 caracteres"],
-      [{ ...base, email: "no-es-email" }, "El email no tiene un formato válido"],
-      [{ ...base, password: "123" }, "La contraseña debe tener al menos 6 caracteres"],
+      [
+        { ...base, nombre: "x".repeat(101) },
+        "El nombre admite como máximo 100 caracteres",
+      ],
+      [
+        { ...base, email: "no-es-email" },
+        "El email no tiene un formato válido",
+      ],
+      [
+        { ...base, password: "123" },
+        "La contraseña debe tener al menos 6 caracteres",
+      ],
       // bcrypt ignora lo que pase de 72 bytes; "ñ" ocupa 2.
-      [{ ...base, password: "ñ".repeat(40) }, "La contraseña es demasiado larga"],
+      [
+        { ...base, password: "ñ".repeat(40) },
+        "La contraseña es demasiado larga",
+      ],
     ];
     for (const [dato, mensaje] of casos) {
       assert.equal(primerError(auth.registro, dato), mensaje);
@@ -53,14 +65,20 @@ describe("esquema de registro", () => {
 
 describe("esquema de login", () => {
   it("normaliza el email", () => {
-    assert.deepEqual(valido(auth.login, { email: " X@Y.COM ", password: "p" }), {
-      email: "x@y.com",
-      password: "p",
-    });
+    assert.deepEqual(
+      valido(auth.login, { email: " X@Y.COM ", password: "p" }),
+      {
+        email: "x@y.com",
+        password: "p",
+      },
+    );
   });
 
   it("no revela qué campo falta", () => {
-    assert.equal(primerError(auth.login, {}), "Ingresa tu email y tu contraseña");
+    assert.equal(
+      primerError(auth.login, {}),
+      "Ingresa tu email y tu contraseña",
+    );
   });
 });
 
@@ -71,8 +89,12 @@ describe("esquemas de libros", () => {
       { titulo: "T", autor: "A", categoria: "General", cantidad: 3 },
     );
     assert.equal(
-      valido(libros.crear, { titulo: "T", autor: "A", categoria: "  ", cantidad: 0 })
-        .categoria,
+      valido(libros.crear, {
+        titulo: "T",
+        autor: "A",
+        categoria: "  ",
+        cantidad: 0,
+      }).categoria,
       "General",
     );
   });
@@ -111,13 +133,19 @@ describe("esquemas de libros", () => {
 
 describe("esquemas de usuarios", () => {
   it("ignora la contraseña vacía al editar", () => {
-    assert.deepEqual(valido(usuarios.actualizar, { password: "", nombre: "B" }), {
-      nombre: "B",
-    });
+    assert.deepEqual(
+      valido(usuarios.actualizar, { password: "", nombre: "B" }),
+      {
+        nombre: "B",
+      },
+    );
   });
 
   it("rechaza un rol inventado", () => {
-    assert.equal(primerError(usuarios.actualizar, { rol: "jefe" }), "Rol no válido");
+    assert.equal(
+      primerError(usuarios.actualizar, { rol: "jefe" }),
+      "Rol no válido",
+    );
   });
 
   it("exige una clave fuerte al administrador", () => {
@@ -130,7 +158,10 @@ describe("esquemas de usuarios", () => {
       "La contraseña debe tener al menos 10 caracteres",
     );
     assert.equal(
-      primerError(usuarios.admin, { email: "a@b.com", password: "sololetraslargas" }),
+      primerError(usuarios.admin, {
+        email: "a@b.com",
+        password: "sololetraslargas",
+      }),
       "La contraseña debe combinar letras y números",
     );
   });
@@ -138,13 +169,21 @@ describe("esquemas de usuarios", () => {
 
 describe("esquemas de préstamos e identificadores", () => {
   it("convierte libro_id y el id de la URL", () => {
-    assert.deepEqual(valido(prestamos.crear, { libro_id: "7" }), { libro_id: 7 });
+    assert.deepEqual(valido(prestamos.crear, { libro_id: "7" }), {
+      libro_id: 7,
+    });
     assert.deepEqual(valido(paramId, { id: "12" }), { id: 12 });
   });
 
   it("rechaza identificadores inválidos", () => {
-    assert.equal(primerError(prestamos.crear, { libro_id: 0 }), "Indica un libro válido");
+    assert.equal(
+      primerError(prestamos.crear, { libro_id: 0 }),
+      "Indica un libro válido",
+    );
     assert.equal(primerError(prestamos.crear, {}), "Indica un libro válido");
-    assert.equal(primerError(paramId, { id: "abc" }), "El identificador no es válido");
+    assert.equal(
+      primerError(paramId, { id: "abc" }),
+      "El identificador no es válido",
+    );
   });
 });

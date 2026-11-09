@@ -1,14 +1,14 @@
 // Los servicios se prueban directamente, sin HTTP: así se ve que la lógica de
 // negocio no depende de Express.
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../../utils/errores");
+const E = require("../../utils/errors");
 const auth = require("../../services/auth");
-const usuarios = require("../../services/usuarios");
-const libros = require("../../services/libros");
-const prestamos = require("../../services/prestamos");
-const { crearLector, crearAdmin, crearLibro } = require("../ayudantes/datos");
+const usuarios = require("../../services/users");
+const libros = require("../../services/books");
+const prestamos = require("../../services/loans");
+const { crearLector, crearAdmin, crearLibro } = require("../helpers/fixtures");
 
 before(() => bd.crearBaseDePrueba());
 after(() => bd.borrarBaseDePrueba());
@@ -21,13 +21,22 @@ describe("servicio de auth", () => {
       email: "ana@x.com",
       password: "secreto1",
     });
-    assert.deepEqual(Object.keys(usuario).sort(), ["email", "id", "nombre", "rol"]);
+    assert.deepEqual(Object.keys(usuario).sort(), [
+      "email",
+      "id",
+      "nombre",
+      "rol",
+    ]);
   });
 
   it("lanza errores con significado", async () => {
     const lector = await crearLector();
     await assert.rejects(
-      auth.registrar({ nombre: "X", email: lector.email, password: "secreto1" }),
+      auth.registrar({
+        nombre: "X",
+        email: lector.email,
+        password: "secreto1",
+      }),
       E.Conflicto,
     );
     await assert.rejects(
@@ -42,17 +51,31 @@ describe("servicio de auth", () => {
     const lector = await crearLector();
     assert.equal((await auth.sesionDesdeToken(lector.token)).id, lector.id);
 
-    await usuarios.actualizar(lector.id, { password: "otraClave1" }, { actorId: admin.id });
+    await usuarios.actualizar(
+      lector.id,
+      { password: "otraClave1" },
+      { actorId: admin.id },
+    );
     await assert.rejects(auth.sesionDesdeToken(lector.token), E.NoAutenticado);
   });
 });
 
 describe("servicio de usuarios", () => {
   it("guardarAdmin crea y luego actualiza", async () => {
-    const datos = { nombre: "Jefa", email: "jefa@x.com", password: "ClaveJefa123" };
-    assert.equal(await usuarios.guardarAdmin(datos, { cambiarNombre: false }), "creado");
+    const datos = {
+      nombre: "Jefa",
+      email: "jefa@x.com",
+      password: "ClaveJefa123",
+    };
+    assert.equal(
+      await usuarios.guardarAdmin(datos, { cambiarNombre: false }),
+      "creado",
+    );
     assert.equal(await usuarios.hayAdmin(), true);
-    assert.equal(await usuarios.guardarAdmin(datos, { cambiarNombre: false }), "actualizado");
+    assert.equal(
+      await usuarios.guardarAdmin(datos, { cambiarNombre: false }),
+      "actualizado",
+    );
   });
 
   it("protege al admin de quitarse el rol o eliminarse", async () => {
@@ -61,7 +84,10 @@ describe("servicio de usuarios", () => {
       usuarios.actualizar(admin.id, { rol: "usuario" }, { actorId: admin.id }),
       E.SolicitudInvalida,
     );
-    await assert.rejects(usuarios.eliminar(admin.id, { actorId: admin.id }), E.SolicitudInvalida);
+    await assert.rejects(
+      usuarios.eliminar(admin.id, { actorId: admin.id }),
+      E.SolicitudInvalida,
+    );
     await assert.rejects(
       usuarios.actualizar(999999, { nombre: "X" }, { actorId: admin.id }),
       E.NoEncontrado,
@@ -80,7 +106,10 @@ describe("servicios de libros y préstamos", () => {
 
     await prestamos.aprobar(prestamo.id);
     assert.equal((await libros.listar())[0].disponibles, 0);
-    await assert.rejects(libros.actualizar(libro.id, { cantidad: 0 }), E.Conflicto);
+    await assert.rejects(
+      libros.actualizar(libro.id, { cantidad: 0 }),
+      E.Conflicto,
+    );
     await assert.rejects(libros.eliminar(libro.id), E.Conflicto);
     await assert.rejects(prestamos.aprobar(prestamo.id), E.SolicitudInvalida);
 
@@ -96,7 +125,13 @@ describe("servicios de libros y préstamos", () => {
     await prestamos.solicitar(ana.id, libro.id);
     await prestamos.solicitar(beto.id, libro.id);
 
-    assert.equal((await prestamos.listarPara({ id: ana.id, rol: "usuario" })).length, 1);
-    assert.equal((await prestamos.listarPara({ id: 0, rol: "admin" })).length, 2);
+    assert.equal(
+      (await prestamos.listarPara({ id: ana.id, rol: "usuario" })).length,
+      1,
+    );
+    assert.equal(
+      (await prestamos.listarPara({ id: 0, rol: "admin" })).length,
+      2,
+    );
   });
 });

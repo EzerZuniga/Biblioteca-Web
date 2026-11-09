@@ -4,7 +4,7 @@ const {
   SolicitudInvalida,
   Conflicto,
   buscarOFallar,
-} = require("../utils/errores");
+} = require("../utils/errors");
 
 const RONDAS_BCRYPT = 10;
 
@@ -12,7 +12,10 @@ const cifrar = (password) => bcrypt.hash(password, RONDAS_BCRYPT);
 
 const verificarPassword = (password, hash) => bcrypt.compare(password, hash);
 
-const exigirEmailLibre = async (email, mensaje = "Ese email ya está en uso") => {
+const exigirEmailLibre = async (
+  email,
+  mensaje = "Ese email ya está en uso",
+) => {
   const existe = await Usuario.findOne({ where: { email } });
   if (existe) throw new Conflicto(mensaje);
 };

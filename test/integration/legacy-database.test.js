@@ -1,11 +1,11 @@
 // Una base con la estructura y los datos del sistema anterior, igual a la que
 // creó sequelize.sync() en Railway: las migraciones deben convertirla.
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
-const migrar = require("../../database/migrar");
+const migrar = require("../../database/migrate");
 const { sequelize } = require("../../models");
 
 const RAIZ = path.join(__dirname, "../..");
@@ -40,7 +40,7 @@ const ESQUEMA_ANTIGUO = `
 
 const ejecutarMigrar = () =>
   new Promise((resolve) => {
-    const proceso = spawn(process.execPath, ["scripts/migrar.js"], {
+    const proceso = spawn(process.execPath, ["scripts/migrate.js"], {
       cwd: RAIZ,
       env: process.env,
     });
@@ -64,7 +64,9 @@ describe("migrar una base antigua", () => {
     assert.equal(a.codigo, 0, a.salida);
     assert.equal(b.codigo, 0, b.salida);
 
-    const libros = await bd.consultar("SELECT id, cantidad FROM libros ORDER BY id");
+    const libros = await bd.consultar(
+      "SELECT id, cantidad FROM libros ORDER BY id",
+    );
     assert.deepEqual(libros, [
       { id: 1, cantidad: 3 },
       { id: 2, cantidad: 4 },
@@ -81,19 +83,26 @@ describe("migrar una base antigua", () => {
       `SELECT DELETE_RULE AS regla FROM information_schema.REFERENTIAL_CONSTRAINTS
         WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'prestamos'`,
     );
-    assert.deepEqual(reglas.map((r) => r.regla), ["RESTRICT", "RESTRICT"]);
+    assert.deepEqual(
+      reglas.map((r) => r.regla),
+      ["RESTRICT", "RESTRICT"],
+    );
 
     await assert.rejects(
       bd.consultar("DELETE FROM usuarios WHERE id = 1"),
       (error) => error.parent?.code === "ER_ROW_IS_REFERENCED_2",
     );
-    const [{ prestamos }] = await bd.consultar("SELECT COUNT(*) AS prestamos FROM prestamos");
+    const [{ prestamos }] = await bd.consultar(
+      "SELECT COUNT(*) AS prestamos FROM prestamos",
+    );
     assert.equal(Number(prestamos), 2);
   });
 
   it("repetir una migración de estructura no duplica restricciones", async () => {
-    await bd.consultar("DELETE FROM migraciones WHERE nombre = '003-proteger-historial.js'");
-    assert.deepEqual(await migrar(sequelize), ["003-proteger-historial.js"]);
+    await bd.consultar(
+      "DELETE FROM migraciones WHERE nombre = '003-protect-loan-history.js'",
+    );
+    assert.deepEqual(await migrar(sequelize), ["003-protect-loan-history.js"]);
 
     const claves = await bd.consultar(
       `SELECT CONSTRAINT_TYPE AS tipo FROM information_schema.TABLE_CONSTRAINTS
@@ -105,5 +114,36 @@ describe("migrar una base antigua", () => {
 
   it("sin migraciones pendientes no hace nada", async () => {
     assert.deepEqual(await migrar(sequelize), []);
+  });
+
+  it("reconoce los nombres anteriores de los archivos y no las repite", async () => {
+    // Así quedó registrado en Railway antes de renombrar los archivos a inglés.
+    await bd.consultar("DELETE FROM migraciones");
+    await bd.consultar(
+      `INSERT INTO migraciones (nombre) VALUES
+        ('001-cantidad-es-total.js'), ('002-version-token.js'), ('003-proteger-historial.js')`,
+    );
+
+    assert.deepEqual(await migrar(sequelize), []);
+
+    const registradas = await bd.consultar(
+      "SELECT nombre FROM migraciones ORDER BY nombre",
+    );
+    assert.deepEqual(
+      registradas.map((m) => m.nombre),
+      [
+        "001-quantity-is-total.js",
+        "002-token-version.js",
+        "003-protect-loan-history.js",
+      ],
+    );
+    const [libro] = await bd.consultar(
+      "SELECT cantidad FROM libros WHERE id = 1",
+    );
+    assert.equal(
+      libro.cantidad,
+      3,
+      "la 001 no debe sumar de nuevo los préstamos",
+    );
   });
 });

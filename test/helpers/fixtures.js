@@ -1,7 +1,7 @@
 // Crea datos de prueba directamente con los servicios, sin pasar por HTTP.
 const auth = require("../../services/auth");
-const usuarios = require("../../services/usuarios");
-const libros = require("../../services/libros");
+const usuarios = require("../../services/users");
+const libros = require("../../services/books");
 
 let secuencia = 0;
 const siguiente = () => ++secuencia;

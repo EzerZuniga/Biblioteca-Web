@@ -6,9 +6,9 @@ const {
   NoAutenticado,
   Conflicto,
   buscarOFallar,
-} = require("../utils/errores");
-const { contarPrestados, transaccion } = require("./inventario");
-const { fechaLocal } = require("../utils/fechas");
+} = require("../utils/errors");
+const { contarPrestados, transaccion } = require("./inventory");
+const { fechaLocal } = require("../utils/dates");
 
 const ESTADOS_ACTIVOS = ["pendiente", "prestado"];
 
@@ -92,7 +92,9 @@ const aprobar = (id) =>
   transaccion(async (t) => {
     const prestamo = await bloquearPrestamo(id, t);
     if (prestamo.estado !== "pendiente") {
-      throw new SolicitudInvalida("Solo se pueden aprobar préstamos pendientes");
+      throw new SolicitudInvalida(
+        "Solo se pueden aprobar préstamos pendientes",
+      );
     }
 
     const libro = await buscarOFallar(

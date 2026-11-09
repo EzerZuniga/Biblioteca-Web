@@ -1,12 +1,12 @@
 const { Op } = require("sequelize");
 const { Libro, Prestamo } = require("../models");
-const { Conflicto, buscarOFallar } = require("../utils/errores");
+const { Conflicto, buscarOFallar } = require("../utils/errors");
 const {
   prestadosLiteral,
   contarPrestados,
   conDisponibles,
   transaccion,
-} = require("./inventario");
+} = require("./inventory");
 
 // En LIKE, % y _ son comodines: se escapan para buscar el texto literal.
 const escaparLike = (texto) => texto.replace(/[\\%_]/g, "\\$&");

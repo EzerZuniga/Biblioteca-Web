@@ -1,10 +1,30 @@
 const fs = require("fs");
 const path = require("path");
 
-const CARPETA = path.join(__dirname, "migraciones");
+const CARPETA = path.join(__dirname, "migrations");
 const CANDADO = "biblioteca_migraciones";
 
-// Aplica en orden las migraciones de database/migraciones que aún no se
+// La tabla guarda el nombre del archivo de cada migración aplicada. Cuando un
+// archivo se renombra, su registro se actualiza aquí; si no, la migración se
+// volvería a aplicar (la 001 sumaría dos veces los préstamos al stock).
+const RENOMBRADAS = {
+  "001-cantidad-es-total.js": "001-quantity-is-total.js",
+  "002-version-token.js": "002-token-version.js",
+  "003-proteger-historial.js": "003-protect-loan-history.js",
+};
+
+const actualizarNombres = async (sequelize) => {
+  for (const [anterior, actual] of Object.entries(RENOMBRADAS)) {
+    await sequelize.query(
+      "UPDATE migraciones SET nombre = ? WHERE nombre = ?",
+      {
+        replacements: [actual, anterior],
+      },
+    );
+  }
+};
+
+// Aplica en orden las migraciones de database/migrations que aún no se
 // ejecutaron y las registra en la tabla "migraciones".
 //
 // Un candado con nombre de MySQL (GET_LOCK) asegura que solo un proceso migre
@@ -24,15 +44,16 @@ async function migrar(sequelize) {
   const sesion = await sequelize.transaction();
   const hechas = [];
   try {
-    const [[candado]] = await sequelize.query(
-      "SELECT GET_LOCK(?, 120) AS ok",
-      { replacements: [CANDADO], transaction: sesion },
-    );
+    const [[candado]] = await sequelize.query("SELECT GET_LOCK(?, 120) AS ok", {
+      replacements: [CANDADO],
+      transaction: sesion,
+    });
     if (Number(candado.ok) !== 1) {
       throw new Error("Otro proceso lleva más de 2 minutos migrando la base");
     }
 
     try {
+      await actualizarNombres(sequelize);
       const [filas] = await sequelize.query("SELECT nombre FROM migraciones");
       const aplicadas = new Set(filas.map((fila) => fila.nombre));
       const pendientes = fs

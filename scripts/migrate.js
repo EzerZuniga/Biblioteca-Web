@@ -1,6 +1,6 @@
 require("dotenv").config({ quiet: true });
 const { sequelize } = require("../models");
-const migrar = require("../database/migrar");
+const migrar = require("../database/migrate");
 
 migrar(sequelize)
   .then((hechas) => {

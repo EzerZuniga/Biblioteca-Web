@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { LIMITES, texto, entero, sinIndefinidos } = require("./comunes");
+const { LIMITES, texto, entero, sinIndefinidos } = require("./common");
 
 const titulo = texto("El título", LIMITES.titulo);
 const autor = texto("El autor", LIMITES.autor);

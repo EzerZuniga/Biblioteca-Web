@@ -1,4 +1,4 @@
-const { ErrorNegocio } = require("../utils/errores");
+const { ErrorNegocio } = require("../utils/errors");
 
 const rutaNoEncontrada = (req, res) => {
   res.status(404).json({ mensaje: "Ruta no encontrada" });
@@ -34,7 +34,9 @@ const manejarErrores = (error, req, res, next) => {
   const conocido = traducir(error);
   if (conocido) {
     const [status, mensaje, errores] = conocido;
-    return res.status(status).json(errores ? { mensaje, errores } : { mensaje });
+    return res
+      .status(status)
+      .json(errores ? { mensaje, errores } : { mensaje });
   }
 
   console.error(

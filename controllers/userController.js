@@ -1,5 +1,5 @@
-const usuarios = require("../services/usuarios");
-const { capturarErrores } = require("../utils/errores");
+const usuarios = require("../services/users");
+const { capturarErrores } = require("../utils/errors");
 
 const listar = async (req, res) => {
   res.json(await usuarios.listar());

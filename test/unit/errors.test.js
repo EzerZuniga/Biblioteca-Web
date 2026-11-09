@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const {
   manejarErrores,
   rutaNoEncontrada,
-} = require("../../middlewares/errores");
+} = require("../../middlewares/errors");
 const {
   SolicitudInvalida,
   NoAutenticado,
@@ -11,7 +11,7 @@ const {
   NoEncontrado,
   Conflicto,
   capturarErrores,
-} = require("../../utils/errores");
+} = require("../../utils/errors");
 
 const respuestaFalsa = ({ enviada = false } = {}) => {
   const res = { headersSent: enviada, statusCode: null, body: null };
@@ -62,18 +62,37 @@ describe("manejador central de errores", () => {
 
   it("traduce errores de Express y de la base", () => {
     const casos = [
-      [Object.assign(new SyntaxError("x"), { type: "entity.parse.failed" }), 400],
+      [
+        Object.assign(new SyntaxError("x"), { type: "entity.parse.failed" }),
+        400,
+      ],
       [Object.assign(new Error("x"), { type: "entity.too.large" }), 413],
-      [errorDeSequelize("SequelizeForeignKeyConstraintError", "ER_ROW_IS_REFERENCED_2"), 409],
-      [errorDeSequelize("SequelizeForeignKeyConstraintError", "ER_NO_REFERENCED_ROW_2"), 409],
+      [
+        errorDeSequelize(
+          "SequelizeForeignKeyConstraintError",
+          "ER_ROW_IS_REFERENCED_2",
+        ),
+        409,
+      ],
+      [
+        errorDeSequelize(
+          "SequelizeForeignKeyConstraintError",
+          "ER_NO_REFERENCED_ROW_2",
+        ),
+        409,
+      ],
       [errorDeSequelize("SequelizeUniqueConstraintError", "ER_DUP_ENTRY"), 409],
     ];
     for (const [error, estado] of casos) {
       assert.equal(manejar(error).res.statusCode, estado);
     }
     assert.match(
-      manejar(errorDeSequelize("SequelizeForeignKeyConstraintError", "ER_NO_REFERENCED_ROW_2"))
-        .res.body.mensaje,
+      manejar(
+        errorDeSequelize(
+          "SequelizeForeignKeyConstraintError",
+          "ER_NO_REFERENCED_ROW_2",
+        ),
+      ).res.body.mensaje,
       /ya no existe/,
     );
   });

@@ -1,4 +1,4 @@
-const migrar = require("./migrar");
+const migrar = require("./migrate");
 const seed = require("./seed");
 
 // Deja la base lista para la app: crea las tablas que falten (sin modificar

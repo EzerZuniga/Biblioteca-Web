@@ -2,15 +2,23 @@
   "name": "biblioteca-web",
   "version": "1.0.0",
   "description": "Sistema Web de Gestión de Biblioteca (Node.js + Express + Sequelize + MySQL)",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "node --watch app.js",
-    "crear-admin": "node scripts/crear-admin.js",
-    "migrar": "node scripts/migrar.js",
-    "respaldo": "node scripts/respaldo.js",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "create-admin": "node scripts/create-admin.js",
+    "migrate": "node scripts/migrate.js",
+    "backup": "node scripts/backup.js",
     "test": "node --test \"test/**/*.test.js\"",
-    "test:unitarios": "node --test \"test/unitarios/**/*.test.js\""
+    "test:unit": "node --test \"test/unit/**/*.test.js\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "license": "ISC",
   "dependencies": {
@@ -25,6 +33,11 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "supertest": "^7.3.1"
   }
 }

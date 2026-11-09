@@ -1,12 +1,12 @@
 // Una base vacía, como un Railway recién creado: la app debe dejarla lista
 // sin cuentas con contraseña conocida.
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { sequelize } = require("../../models");
-const prepararBase = require("../../database/preparar");
+const prepararBase = require("../../database/prepare");
 const auth = require("../../services/auth");
 
 const RAIZ = path.join(__dirname, "../..");
@@ -31,13 +31,20 @@ after(() => bd.borrarBaseDePrueba());
 
 describe("preparar una base vacía", () => {
   it("aplica las migraciones y carga los libros de ejemplo", async () => {
-    const migraciones = await bd.consultar("SELECT nombre FROM migraciones ORDER BY nombre");
-    assert.deepEqual(migraciones.map((m) => m.nombre), [
-      "001-cantidad-es-total.js",
-      "002-version-token.js",
-      "003-proteger-historial.js",
-    ]);
-    const [{ libros }] = await bd.consultar("SELECT COUNT(*) AS libros FROM libros");
+    const migraciones = await bd.consultar(
+      "SELECT nombre FROM migraciones ORDER BY nombre",
+    );
+    assert.deepEqual(
+      migraciones.map((m) => m.nombre),
+      [
+        "001-quantity-is-total.js",
+        "002-token-version.js",
+        "003-protect-loan-history.js",
+      ],
+    );
+    const [{ libros }] = await bd.consultar(
+      "SELECT COUNT(*) AS libros FROM libros",
+    );
     assert.equal(Number(libros), 8);
   });
 
@@ -51,7 +58,10 @@ describe("preparar una base vacía", () => {
       `SELECT DELETE_RULE AS regla FROM information_schema.REFERENTIAL_CONSTRAINTS
         WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'prestamos'`,
     );
-    assert.deepEqual(reglas.map((r) => r.regla), ["RESTRICT", "RESTRICT"]);
+    assert.deepEqual(
+      reglas.map((r) => r.regla),
+      ["RESTRICT", "RESTRICT"],
+    );
     await assert.rejects(
       bd.consultar("UPDATE libros SET cantidad = -1 LIMIT 1"),
       (error) => error.parent?.code === "ER_CHECK_CONSTRAINT_VIOLATED",
@@ -68,21 +78,26 @@ describe("preparar una base vacía", () => {
       password: "ClaveInicial123",
     });
     assert.ok(sesion.token);
-    const [{ libros }] = await bd.consultar("SELECT COUNT(*) AS libros FROM libros");
+    const [{ libros }] = await bd.consultar(
+      "SELECT COUNT(*) AS libros FROM libros",
+    );
     assert.equal(Number(libros), 8);
   });
 });
 
-describe("comando crear-admin", () => {
+describe("comando create-admin", () => {
   const crearAdmin = (variables) =>
-    spawnSync(process.execPath, ["scripts/crear-admin.js"], {
+    spawnSync(process.execPath, ["scripts/create-admin.js"], {
       cwd: RAIZ,
       env: { ...process.env, ...variables },
       encoding: "utf8",
     });
 
   it("rechaza una clave débil sin tocar la base", () => {
-    const resultado = crearAdmin({ ADMIN_EMAIL: "a@prueba.com", ADMIN_PASSWORD: "corta" });
+    const resultado = crearAdmin({
+      ADMIN_EMAIL: "a@prueba.com",
+      ADMIN_PASSWORD: "corta",
+    });
     assert.notEqual(resultado.status, 0);
     assert.match(resultado.stderr, /al menos 10 caracteres/);
   });

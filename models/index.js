@@ -1,7 +1,7 @@
 const sequelize = require("../config/db");
-const Usuario = require("./Usuario");
-const Libro = require("./Libro");
-const Prestamo = require("./Prestamo");
+const Usuario = require("./User");
+const Libro = require("./Book");
+const Prestamo = require("./Loan");
 
 // RESTRICT: la base nunca borra préstamos en cascada. Un usuario o un libro con
 // historial de préstamos no se puede eliminar, ni por la app ni a mano.

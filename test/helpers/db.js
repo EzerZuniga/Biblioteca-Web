@@ -41,7 +41,7 @@ async function crearBaseDePrueba({ preparar = true } = {}) {
   await cx.end();
 
   if (preparar) {
-    const prepararBase = require("../../database/preparar");
+    const prepararBase = require("../../database/prepare");
     await prepararBase(modelos().sequelize, { datosIniciales: false });
   }
 }

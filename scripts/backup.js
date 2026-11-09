@@ -2,9 +2,9 @@ require("dotenv").config({ quiet: true });
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
-const { marcaLocal } = require("../utils/fechas");
+const { marcaLocal } = require("../utils/dates");
 
-// Genera un respaldo completo de la base con mysqldump en la carpeta respaldos/.
+// Genera un respaldo completo de la base con mysqldump en la carpeta backups/.
 // Usa las mismas variables DB_* de la app. Para respaldar Railway, define esas
 // variables con los datos de conexión pública de su servicio MySQL.
 
@@ -25,14 +25,19 @@ if (!mysqldump) {
   process.exit(1);
 }
 
-const { DB_HOST = "localhost", DB_PORT = "3306", DB_USER, DB_PASS, DB_NAME } =
-  process.env;
+const {
+  DB_HOST = "localhost",
+  DB_PORT = "3306",
+  DB_USER,
+  DB_PASS,
+  DB_NAME,
+} = process.env;
 if (!DB_USER || !DB_NAME) {
   console.error("Faltan DB_USER o DB_NAME en el entorno.");
   process.exit(1);
 }
 
-const carpeta = path.join(__dirname, "..", "respaldos");
+const carpeta = path.join(__dirname, "..", "backups");
 fs.mkdirSync(carpeta, { recursive: true });
 const archivo = path.join(carpeta, `${DB_NAME}-${marcaLocal()}.sql`);
 

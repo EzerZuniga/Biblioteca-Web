@@ -8,7 +8,7 @@ async function cargar() {
     const prestamos = await api("/prestamos");
     if (!prestamos.length) {
       $("contenido").innerHTML =
-        `<div class="vacio"><strong>Todavía no has pedido libros</strong>Busca uno en el <a href="/catalogo.html">catálogo</a> y solicita tu primer préstamo.</div>`;
+        `<div class="vacio"><strong>Todavía no has pedido libros</strong>Busca uno en el <a href="/catalog.html">catálogo</a> y solicita tu primer préstamo.</div>`;
       return;
     }
     $("contenido").innerHTML = `

@@ -1,9 +1,9 @@
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const jwt = require("jsonwebtoken");
-const api = require("../ayudantes/api");
-const { crearLector, crearAdmin } = require("../ayudantes/datos");
+const api = require("../helpers/api");
+const { crearLector, crearAdmin } = require("../helpers/fixtures");
 
 before(() => bd.crearBaseDePrueba());
 after(() => bd.borrarBaseDePrueba());
@@ -32,7 +32,11 @@ describe("POST /auth/register", () => {
   it("rechaza un email ya registrado", async () => {
     await crearLector({ email: "repetido@prueba.com" });
     const res = await api.post("/auth/register", {
-      cuerpo: { nombre: "Otra", email: "repetido@prueba.com", password: "secreto1" },
+      cuerpo: {
+        nombre: "Otra",
+        email: "repetido@prueba.com",
+        password: "secreto1",
+      },
     });
     assert.equal(res.status, 409);
     assert.equal(res.body.mensaje, "Ese email ya está registrado");
@@ -42,7 +46,11 @@ describe("POST /auth/register", () => {
     const respuestas = await Promise.all(
       [1, 2, 3].map(() =>
         api.post("/auth/register", {
-          cuerpo: { nombre: "Doble", email: "doble@prueba.com", password: "secreto1" },
+          cuerpo: {
+            nombre: "Doble",
+            email: "doble@prueba.com",
+            password: "secreto1",
+          },
         }),
       ),
     );
@@ -61,7 +69,11 @@ describe("POST /auth/register", () => {
 
   it("rechaza un nombre más largo que la columna", async () => {
     const res = await api.post("/auth/register", {
-      cuerpo: { nombre: "x".repeat(101), email: "l@prueba.com", password: "secreto1" },
+      cuerpo: {
+        nombre: "x".repeat(101),
+        email: "l@prueba.com",
+        password: "secreto1",
+      },
     });
     assert.equal(res.status, 400);
     assert.equal(res.body.errores[0].campo, "nombre");
@@ -138,7 +150,11 @@ describe("sesiones", () => {
 
   it("acepta tokens emitidos antes de existir la versión de sesión", async () => {
     const lector = await crearLector();
-    const antiguo = firmar({ id: lector.id, nombre: lector.nombre, rol: "usuario" });
+    const antiguo = firmar({
+      id: lector.id,
+      nombre: lector.nombre,
+      rol: "usuario",
+    });
     const res = await api.get("/libros", { token: antiguo });
     assert.equal(res.status, 200);
   });
@@ -146,7 +162,9 @@ describe("sesiones", () => {
   it("invalida la sesión de un usuario eliminado", async () => {
     const admin = await crearAdmin();
     const lector = await crearLector();
-    await api.delete(`/usuarios/${lector.id}`, { token: admin.token }).expect(200);
+    await api
+      .delete(`/usuarios/${lector.id}`, { token: admin.token })
+      .expect(200);
     const res = await api.get("/libros", { token: lector.token });
     assert.equal(res.status, 401);
   });
@@ -155,10 +173,16 @@ describe("sesiones", () => {
     const admin = await crearAdmin();
     const otro = await crearAdmin();
     await api
-      .put(`/usuarios/${otro.id}`, { token: admin.token, cuerpo: { rol: "usuario" } })
+      .put(`/usuarios/${otro.id}`, {
+        token: admin.token,
+        cuerpo: { rol: "usuario" },
+      })
       .expect(200);
 
-    assert.equal((await api.get("/usuarios", { token: otro.token })).status, 403);
+    assert.equal(
+      (await api.get("/usuarios", { token: otro.token })).status,
+      403,
+    );
     const yo = await api.get("/auth/yo", { token: otro.token });
     assert.equal(yo.body.rol, "usuario");
   });
@@ -173,12 +197,18 @@ describe("sesiones", () => {
       })
       .expect(200);
 
-    assert.equal((await api.get("/libros", { token: lector.token })).status, 401);
+    assert.equal(
+      (await api.get("/libros", { token: lector.token })).status,
+      401,
+    );
     const login = await api.post("/auth/login", {
       cuerpo: { email: lector.email, password: "nuevaClave9" },
     });
     assert.equal(login.status, 200);
-    assert.equal((await api.get("/libros", { token: login.body.token })).status, 200);
+    assert.equal(
+      (await api.get("/libros", { token: login.body.token })).status,
+      200,
+    );
   });
 });
 

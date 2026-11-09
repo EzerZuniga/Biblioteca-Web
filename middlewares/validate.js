@@ -1,4 +1,4 @@
-const { SolicitudInvalida } = require("../utils/errores");
+const { SolicitudInvalida } = require("../utils/errors");
 
 // Valida y normaliza body, params o query con esquemas de zod. Los campos que
 // no están en el esquema se descartan, así nadie puede colar, por ejemplo,

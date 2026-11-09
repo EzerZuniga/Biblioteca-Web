@@ -1,5 +1,5 @@
 const { sesionDesdeToken } = require("../services/auth");
-const { SinPermiso } = require("../utils/errores");
+const { SinPermiso } = require("../utils/errors");
 
 const verificarToken = async (req, res, next) => {
   const cabecera = req.headers.authorization || "";

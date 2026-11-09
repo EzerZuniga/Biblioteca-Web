@@ -1,11 +1,5 @@
 const { z } = require("zod");
-const {
-  LIMITES,
-  texto,
-  email,
-  password,
-  sinIndefinidos,
-} = require("./comunes");
+const { LIMITES, texto, email, password, sinIndefinidos } = require("./common");
 const { MIN_PASSWORD } = require("./auth");
 
 const actualizar = z
@@ -23,7 +17,7 @@ const actualizar = z
 
 const MIN_PASSWORD_ADMIN = 10;
 
-// Para crear-admin y el administrador inicial: clave más exigente.
+// Para create-admin y el administrador inicial: clave más exigente.
 const admin = z.object({
   email,
   password: password(MIN_PASSWORD_ADMIN).refine(

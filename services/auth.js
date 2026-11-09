@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { Usuario } = require("../models");
-const { NoAutenticado } = require("../utils/errores");
-const { cifrar, verificarPassword, exigirEmailLibre } = require("./usuarios");
+const { NoAutenticado } = require("../utils/errors");
+const { cifrar, verificarPassword, exigirEmailLibre } = require("./users");
 
 const DURACION_TOKEN = "8h";
 

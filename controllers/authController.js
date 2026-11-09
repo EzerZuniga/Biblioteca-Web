@@ -1,5 +1,5 @@
 const auth = require("../services/auth");
-const { capturarErrores } = require("../utils/errores");
+const { capturarErrores } = require("../utils/errors");
 
 const register = async (req, res) => {
   const usuario = await auth.registrar(req.body);

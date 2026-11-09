@@ -10,9 +10,9 @@ if (faltantes.length) {
   process.exit(1);
 }
 
-const app = require("./aplicacion");
+const app = require("./app");
 const { sequelize } = require("./models");
-const prepararBase = require("./database/preparar");
+const prepararBase = require("./database/prepare");
 
 const PORT = process.env.PORT || 3000;
 

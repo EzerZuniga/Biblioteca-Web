@@ -1,8 +1,8 @@
-const bd = require("../ayudantes/bd");
+const bd = require("../helpers/db");
 const { describe, it, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const api = require("../ayudantes/api");
-const { crearLector } = require("../ayudantes/datos");
+const api = require("../helpers/api");
+const { crearLector } = require("../helpers/fixtures");
 
 before(() => bd.crearBaseDePrueba());
 after(() => bd.borrarBaseDePrueba());
@@ -19,14 +19,16 @@ describe("cabeceras", () => {
   });
 
   it("no habilita CORS para otros sitios", async () => {
-    const res = await api.get("/libros").set("Origin", "https://sitio-malicioso.com");
+    const res = await api
+      .get("/libros")
+      .set("Origin", "https://sitio-malicioso.com");
     assert.equal(res.headers["access-control-allow-origin"], undefined);
   });
 
   it("no hay scripts en línea en el HTML", async () => {
     const res = await api.get("/");
     assert.doesNotMatch(res.text, /<script>/);
-    assert.equal((await api.get("/js/inicio.js")).status, 200);
+    assert.equal((await api.get("/js/home.js")).status, 200);
   });
 });
 
@@ -35,7 +37,10 @@ describe("límites de intentos", () => {
     const lector = await crearLector();
     const ip = "203.0.113.10";
     const intento = (password, desde = ip) =>
-      api.post("/auth/login", { ip: desde, cuerpo: { email: lector.email, password } });
+      api.post("/auth/login", {
+        ip: desde,
+        cuerpo: { email: lector.email, password },
+      });
 
     for (let i = 0; i < 10; i++) {
       assert.equal((await intento(`mala${i}`)).status, 401);
@@ -63,7 +68,11 @@ describe("límites de intentos", () => {
     for (let i = 0; i < 6; i++) {
       const res = await api.post("/auth/register", {
         ip: "203.0.113.30",
-        cuerpo: { nombre: "R", email: `r${i}@prueba.com`, password: "secreto1" },
+        cuerpo: {
+          nombre: "R",
+          email: `r${i}@prueba.com`,
+          password: "secreto1",
+        },
       });
       estados.push(res.status);
     }
@@ -72,7 +81,9 @@ describe("límites de intentos", () => {
 
   it("la API frena más de 300 peticiones por minuto de una IP", async () => {
     const respuestas = await Promise.all(
-      Array.from({ length: 305 }, () => api.get("/libros", { ip: "203.0.113.40" })),
+      Array.from({ length: 305 }, () =>
+        api.get("/libros", { ip: "203.0.113.40" }),
+      ),
     );
     const frenadas = respuestas.filter((r) => r.status === 429).length;
     assert.equal(frenadas, 5);

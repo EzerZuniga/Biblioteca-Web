@@ -4,15 +4,15 @@ const {
   soloAdmin,
   soloUsuario,
 } = require("../middlewares/auth");
-const validar = require("../middlewares/validar");
-const esquemas = require("../validaciones/prestamos");
-const { paramId } = require("../validaciones/comunes");
+const validar = require("../middlewares/validate");
+const esquemas = require("../validators/loans");
+const { paramId } = require("../validators/common");
 const {
   crear,
   listar,
   aprobar,
   devolver,
-} = require("../controllers/prestamoController");
+} = require("../controllers/loanController");
 
 router.use(verificarToken);
 

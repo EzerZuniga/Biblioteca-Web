@@ -1,9 +1,9 @@
 const router = require("express").Router();
 const { register, login, yo } = require("../controllers/authController");
 const { verificarToken } = require("../middlewares/auth");
-const { limiteLogin, limiteRegistro } = require("../middlewares/seguridad");
-const validar = require("../middlewares/validar");
-const esquemas = require("../validaciones/auth");
+const { limiteLogin, limiteRegistro } = require("../middlewares/security");
+const validar = require("../middlewares/validate");
+const esquemas = require("../validators/auth");
 
 router.post(
   "/register",

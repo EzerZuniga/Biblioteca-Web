@@ -24,7 +24,7 @@ function cerrarSesion() {
 
 function irAlInicio(usuario) {
   location.href =
-    usuario.rol === "admin" ? "/admin-prestamos.html" : "/catalogo.html";
+    usuario.rol === "admin" ? "/admin-loans.html" : "/catalog.html";
 }
 
 function protegerPagina(rolRequerido) {
@@ -132,13 +132,13 @@ function renderNavbar() {
   const enlaces =
     usuario.rol === "admin"
       ? [
-          ["/admin-prestamos.html", "Préstamos"],
-          ["/admin-libros.html", "Libros"],
-          ["/admin-usuarios.html", "Usuarios"],
+          ["/admin-loans.html", "Préstamos"],
+          ["/admin-books.html", "Libros"],
+          ["/admin-users.html", "Usuarios"],
         ]
       : [
-          ["/catalogo.html", "Catálogo"],
-          ["/mis-prestamos.html", "Mis préstamos"],
+          ["/catalog.html", "Catálogo"],
+          ["/my-loans.html", "Mis préstamos"],
         ];
 
   const barra = document.createElement("header");
@@ -177,7 +177,10 @@ function renderNavbar() {
     const abierto = botonMenu.getAttribute("aria-expanded") !== "true";
     barra.classList.toggle("menu-abierto", abierto);
     botonMenu.setAttribute("aria-expanded", String(abierto));
-    botonMenu.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+    botonMenu.setAttribute(
+      "aria-label",
+      abierto ? "Cerrar menú" : "Abrir menú",
+    );
   });
 
   barra.querySelectorAll("nav a").forEach((enlace) => {

@@ -1,13 +1,13 @@
 const router = require("express").Router();
 const { verificarToken, soloAdmin } = require("../middlewares/auth");
-const validar = require("../middlewares/validar");
-const esquemas = require("../validaciones/usuarios");
-const { paramId } = require("../validaciones/comunes");
+const validar = require("../middlewares/validate");
+const esquemas = require("../validators/users");
+const { paramId } = require("../validators/common");
 const {
   listar,
   actualizar,
   eliminar,
-} = require("../controllers/usuarioController");
+} = require("../controllers/userController");
 
 router.use(verificarToken, soloAdmin);
 

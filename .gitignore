@@ -149,4 +149,4 @@ vite.config.ts.timestamp-*
 .turbo
 
 # Respaldos de la base (contienen datos personales)
-respaldos/
+backups/
