@@ -1,5 +1,5 @@
 const sesion = getUsuario();
-if (getToken() && sesion) irAlInicio(sesion);
+if (sesion) irAlInicio(sesion);
 
 $("formRegistro").addEventListener("submit", async (e) => {
   e.preventDefault();

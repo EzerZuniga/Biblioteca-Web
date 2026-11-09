@@ -1,5 +1,5 @@
 const sesion = getUsuario();
-if (getToken() && sesion) irAlInicio(sesion);
+if (sesion) irAlInicio(sesion);
 
 if (new URLSearchParams(location.search).get("registrado")) {
   $("aviso").hidden = false;
@@ -14,7 +14,7 @@ $("formLogin").addEventListener("submit", async (e) => {
       email: $("email").value,
       password: $("password").value,
     });
-    guardarSesion(datos.token, datos.usuario);
+    guardarSesion(datos.usuario);
     irAlInicio(datos.usuario);
   } catch (error) {
     $("error").textContent = error.message;

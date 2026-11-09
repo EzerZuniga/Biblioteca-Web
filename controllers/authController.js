@@ -1,4 +1,5 @@
 const auth = require("../services/auth");
+const cookieSesion = require("../utils/sessionCookie");
 const { capturarErrores } = require("../utils/errors");
 
 const register = async (req, res) => {
@@ -6,8 +7,17 @@ const register = async (req, res) => {
   res.status(201).json({ mensaje: "Cuenta creada correctamente", usuario });
 };
 
+// El token va en la cookie httpOnly y no en la respuesta: el JavaScript del
+// navegador nunca lo ve.
 const login = async (req, res) => {
-  res.json(await auth.iniciarSesion(req.body));
+  const { token, usuario } = await auth.iniciarSesion(req.body);
+  cookieSesion.guardar(req, res, token);
+  res.json({ usuario });
+};
+
+const logout = (req, res) => {
+  cookieSesion.borrar(req, res);
+  res.json({ mensaje: "Sesión cerrada" });
 };
 
 const yo = (req, res) => {
@@ -15,4 +25,4 @@ const yo = (req, res) => {
   res.json({ id, nombre, rol });
 };
 
-module.exports = capturarErrores({ register, login, yo });
+module.exports = capturarErrores({ register, login, logout, yo });

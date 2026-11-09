@@ -1,8 +1,16 @@
 const $ = (id) => document.getElementById(id);
 
-function getToken() {
-  return localStorage.getItem("token");
-}
+const BASE_API = "/api/v1";
+// Cabecera que el servidor exige para cambiar datos con la cookie de sesión.
+const CABECERAS_API = {
+  "Content-Type": "application/json",
+  "X-Requested-With": "fetch",
+};
+
+// El token de sesión vive en una cookie httpOnly que este código no puede
+// leer. Aquí solo se guardan el nombre y el rol, para pintar la interfaz.
+// Las versiones anteriores guardaban el token: se borra si quedó.
+localStorage.removeItem("token");
 
 function getUsuario() {
   try {
@@ -12,14 +20,24 @@ function getUsuario() {
   }
 }
 
-function guardarSesion(token, usuario) {
-  localStorage.setItem("token", token);
+function guardarSesion(usuario) {
   localStorage.setItem("usuario", JSON.stringify(usuario));
 }
 
-function cerrarSesion() {
-  localStorage.clear();
+function olvidarSesion() {
+  localStorage.removeItem("usuario");
   location.href = "/login.html";
+}
+
+async function cerrarSesion() {
+  try {
+    await fetch(`${BASE_API}/auth/logout`, {
+      method: "POST",
+      headers: CABECERAS_API,
+    });
+  } finally {
+    olvidarSesion();
+  }
 }
 
 function irAlInicio(usuario) {
@@ -29,7 +47,7 @@ function irAlInicio(usuario) {
 
 function protegerPagina(rolRequerido) {
   const usuario = getUsuario();
-  if (!getToken() || !usuario) {
+  if (!usuario) {
     location.href = "/login.html";
     return false;
   }
@@ -39,8 +57,6 @@ function protegerPagina(rolRequerido) {
   }
   return true;
 }
-
-const BASE_API = "/api/v1";
 
 // Arma "/ruta?clave=valor" omitiendo los parámetros vacíos.
 function conConsulta(ruta, parametros = {}) {
@@ -53,11 +69,8 @@ function conConsulta(ruta, parametros = {}) {
 }
 
 async function api(ruta, metodo = "GET", cuerpo = null) {
-  const opciones = {
-    method: metodo,
-    headers: { "Content-Type": "application/json" },
-  };
-  if (getToken()) opciones.headers.Authorization = `Bearer ${getToken()}`;
+  // La cookie de sesión la envía el navegador solo (mismo origen).
+  const opciones = { method: metodo, headers: CABECERAS_API };
   if (cuerpo) opciones.body = JSON.stringify(cuerpo);
 
   let respuesta;
@@ -68,11 +81,11 @@ async function api(ruta, metodo = "GET", cuerpo = null) {
   }
   const datos = await respuesta.json().catch(() => ({}));
 
-  if (respuesta.status === 401 && getToken()) {
-    cerrarSesion();
+  if (respuesta.status === 401 && getUsuario()) {
+    olvidarSesion();
     throw new Error(datos.mensaje || "Tu sesión expiró");
   }
-  if (respuesta.status === 403 && getToken()) {
+  if (respuesta.status === 403 && getUsuario()) {
     await revisarRol();
   }
   if (!respuesta.ok) throw new Error(datos.mensaje || "Ocurrió un error");
@@ -83,9 +96,7 @@ async function api(ruta, metodo = "GET", cuerpo = null) {
 // navegador quedó viejo. Se consulta el actual y se lleva al usuario a su inicio.
 async function revisarRol() {
   try {
-    const respuesta = await fetch(`${BASE_API}/auth/yo`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
+    const respuesta = await fetch(`${BASE_API}/auth/yo`);
     if (!respuesta.ok) return;
     const actual = await respuesta.json();
     if (getUsuario()?.rol !== actual.rol) {

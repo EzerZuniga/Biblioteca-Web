@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 const { Usuario } = require("../models");
 const { NoAutenticado } = require("../utils/errors");
 const { cifrar, verificarPassword, exigirEmailLibre } = require("./users");
-
-const DURACION_TOKEN = "8h";
+const { DURACION_SESION_SEGUNDOS } = require("../config/session");
 
 const registrar = async ({ nombre, email, password }) => {
   await exigirEmailLibre(email, "Ese email ya está registrado");
@@ -27,7 +26,7 @@ const iniciarSesion = async ({ email, password }) => {
   const token = jwt.sign(
     { ...datos, v: usuario.version_token },
     process.env.JWT_SECRET,
-    { expiresIn: DURACION_TOKEN },
+    { expiresIn: DURACION_SESION_SEGUNDOS },
   );
   return { token, usuario: datos };
 };

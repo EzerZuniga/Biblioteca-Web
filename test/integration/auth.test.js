@@ -82,13 +82,14 @@ describe("POST /auth/register", () => {
 });
 
 describe("POST /auth/login", () => {
-  it("devuelve un token y los datos del usuario", async () => {
+  it("devuelve los datos del usuario y la sesión solo en la cookie", async () => {
     const lector = await crearLector();
     const res = await api.post("/api/v1/auth/login", {
       cuerpo: { email: lector.email.toUpperCase(), password: lector.password },
     });
     assert.equal(res.status, 200);
-    assert.ok(res.body.token);
+    assert.ok(api.cookieDeSesion(res));
+    assert.equal(res.body.token, undefined);
     assert.deepEqual(res.body.usuario, {
       id: lector.id,
       nombre: lector.nombre,
@@ -206,7 +207,8 @@ describe("sesiones", () => {
     });
     assert.equal(login.status, 200);
     assert.equal(
-      (await api.get("/api/v1/libros", { token: login.body.token })).status,
+      (await api.get("/api/v1/libros", { cookie: api.cookieDeSesion(login) }))
+        .status,
       200,
     );
   });

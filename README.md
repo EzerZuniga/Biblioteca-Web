@@ -161,6 +161,15 @@ despliegue con migraciones es una buena costumbre.
 - **Cabeceras.** helmet envía una política de contenido que solo permite
   scripts propios, protección contra clickjacking y HSTS. Por eso el HTML no
   debe tener scripts en línea: todo va en `public/js/`.
+- **Sesión en cookie httpOnly.** El login guarda el token en una cookie que
+  JavaScript no puede leer (`HttpOnly`), que el navegador no envía desde otros
+  sitios (`SameSite=Strict`) y que solo viaja por HTTPS en producción
+  (`Secure`). El navegador nunca ve el token: `localStorage` solo guarda el
+  nombre y el rol para pintar la interfaz. Los clientes que no son un navegador
+  pueden seguir enviando el token en `Authorization: Bearer`.
+- **CSRF.** Con la cookie, toda petición que modifica datos debe traer la
+  cabecera `X-Requested-With: fetch`, que solo agrega el frontend; otro sitio no
+  puede ponerla porque CORS está cerrado.
 - **CORS cerrado.** El frontend se sirve desde el mismo dominio, así que otros
   sitios no pueden llamar a la API desde el navegador.
 - **Proxy.** La app confía en un proxy delante (`trust proxy` = 1), que es lo que
@@ -178,7 +187,7 @@ los mensajes y los comentarios van en español.
 biblioteca-web/
 ├── server.js                    punto de entrada: prepara la base y escucha
 ├── app.js                       arma la app de Express (la usan server.js y los tests)
-├── config/db.js                 conexión Sequelize -> MySQL
+├── config/                      db (conexión Sequelize -> MySQL) y session
 ├── models/                      User, Book, Loan + relaciones (index.js)
 ├── railway.json                 despliegue: healthcheck, apagado y reinicios
 ├── routes/                      apiV1 (agrupa auth, users, books, loans),
@@ -188,7 +197,8 @@ biblioteca-web/
 ├── controllers/                 auth, user, book, loan
 ├── services/                    lógica de negocio: auth, users, books, loans,
 │                                inventory (ejemplares disponibles), pagination
-├── utils/                       errors, dates, logger, shutdown, serverState
+├── utils/                       errors, dates, logger, shutdown, serverState,
+│                                sessionCookie
 ├── database/create-database.sql crea la base vacía (las tablas las crea la app)
 ├── database/migrations/         cambios de la base, se aplican al arrancar
 ├── database/migrate.js          ejecuta las migraciones pendientes
@@ -230,7 +240,7 @@ que pide recargar la página.
 
 | Método              | Ruta (bajo `/api/v1`)                           | Quién                             |
 | ------------------- | ----------------------------------------------- | --------------------------------- |
-| POST                | /auth/register, /auth/login                     | Público                           |
+| POST                | /auth/register, /auth/login, /auth/logout       | Público                           |
 | GET                 | /auth/yo (datos y rol actuales de la sesión)    | Con sesión                        |
 | GET / PUT / DELETE  | /usuarios, /usuarios/:id                        | Admin                             |
 | GET                 | /libros (`?titulo=`)                            | Con sesión                        |

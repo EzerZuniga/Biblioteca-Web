@@ -11,7 +11,6 @@ const COMPARTIDAS_DEL_FRONTEND = [
   "conConsulta",
   "esc",
   "formatearFecha",
-  "getToken",
   "getUsuario",
   "guardarSesion",
   "irAlInicio",

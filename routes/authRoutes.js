@@ -1,5 +1,10 @@
 const router = require("express").Router();
-const { register, login, yo } = require("../controllers/authController");
+const {
+  register,
+  login,
+  logout,
+  yo,
+} = require("../controllers/authController");
 const { verificarToken } = require("../middlewares/auth");
 const { limiteLogin, limiteRegistro } = require("../middlewares/security");
 const validar = require("../middlewares/validate");
@@ -12,6 +17,7 @@ router.post(
   register,
 );
 router.post("/login", limiteLogin, validar({ body: esquemas.login }), login);
+router.post("/logout", logout);
 router.get("/yo", verificarToken, yo);
 
 module.exports = router;
