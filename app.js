@@ -4,8 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const { sequelize } = require("./models");
 
-if (!process.env.JWT_SECRET) {
-  console.error("Falta JWT_SECRET en el archivo .env");
+const faltantes = ["DB_NAME", "DB_USER", "JWT_SECRET"].filter(
+  (nombre) => !process.env[nombre],
+);
+if (faltantes.length) {
+  console.error(
+    `Faltan variables de entorno: ${faltantes.join(", ")}. Revisa tu archivo .env`,
+  );
   process.exit(1);
 }
 
