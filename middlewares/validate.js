@@ -13,7 +13,15 @@ const validar = (esquemas) => (req, res, next) => {
       }));
       return next(new SolicitudInvalida(errores[0].mensaje, errores));
     }
-    req[parte] = resultado.data;
+    // En Express 5, req.query es un getter de solo lectura: una asignación
+    // normal se ignora en silencio. Definir la propiedad en la petición la
+    // reemplaza de verdad, y funciona igual para body y params.
+    Object.defineProperty(req, parte, {
+      value: resultado.data,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
   }
   next();
 };
