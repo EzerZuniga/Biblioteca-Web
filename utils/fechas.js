@@ -28,4 +28,22 @@ const fechaLocal = (momento = new Date()) => {
   return `${partes.year}-${partes.month}-${partes.day}`;
 };
 
-module.exports = { fechaLocal, ZONA_HORARIA };
+// Marca de fecha y hora local para nombres de archivo: AAAAMMDD-HHMM.
+const marcaLocal = (momento = new Date()) => {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: ZONA_HORARIA,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(momento)
+      .map(({ type, value }) => [type, value]),
+  );
+  return `${partes.year}${partes.month}${partes.day}-${partes.hour}${partes.minute}`;
+};
+
+module.exports = { fechaLocal, marcaLocal, ZONA_HORARIA };

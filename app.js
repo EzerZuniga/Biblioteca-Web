@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const { sequelize } = require("./models");
 const { cabeceras, limiteApi } = require("./middlewares/seguridad");
+const { rutaNoEncontrada, manejarErrores } = require("./middlewares/errores");
 
 const faltantes = ["DB_NAME", "DB_USER", "JWT_SECRET"].filter(
   (nombre) => !process.env[nombre],
@@ -33,24 +34,8 @@ app.use("/usuarios", require("./routes/usuarioRoutes"));
 app.use("/libros", require("./routes/libroRoutes"));
 app.use("/prestamos", require("./routes/prestamoRoutes"));
 
-app.use((req, res) => {
-  res.status(404).json({ mensaje: "Ruta no encontrada" });
-});
-
-app.use((err, req, res, next) => {
-  if (err.type === "entity.parse.failed") {
-    return res
-      .status(400)
-      .json({ mensaje: "El cuerpo de la petición no es un JSON válido" });
-  }
-  if (err.type === "entity.too.large") {
-    return res
-      .status(413)
-      .json({ mensaje: "La petición es demasiado grande" });
-  }
-  console.error(err);
-  res.status(500).json({ mensaje: "Error del servidor" });
-});
+app.use(rutaNoEncontrada);
+app.use(manejarErrores);
 
 const PORT = process.env.PORT || 3000;
 

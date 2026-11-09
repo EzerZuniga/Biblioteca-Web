@@ -5,7 +5,7 @@ Node.js + Express + Sequelize + MySQL + bcrypt + JWT + crypto. Frontend en HTML/
 ## Cómo ejecutarlo
 
 1. Instalar dependencias: `npm install`
-2. Crear la base de datos (pide la contraseña de tu MySQL): `mysql -u root -p < database/biblioteca.sql`
+2. Crear la base de datos vacía (pide la contraseña de tu MySQL): `mysql -u root -p -e "source database/biblioteca.sql"`
 3. Copiar `.env.example` a `.env` y completar `DB_PASS` (y cambiar `JWT_SECRET`).
 4. Crear el administrador (ver abajo).
 5. Iniciar: `npm start`  (o `npm run dev` para reiniciar solo al guardar)
@@ -61,6 +61,45 @@ Para crear una nueva, agrega un archivo `NNN-descripcion.js` que exporte
 `up({ sequelize, transaction })`. Ojo: en MySQL los cambios de estructura
 (`ALTER TABLE`, `CREATE TABLE`) no se pueden deshacer dentro de una transacción.
 
+## Respaldos
+
+`npm run respaldo` guarda una copia completa de la base en `respaldos/`, con la
+fecha y hora en el nombre. Esa carpeta está fuera de git porque contiene datos
+personales. Usa las variables `DB_*` y necesita `mysqldump`, que viene con MySQL.
+
+**Respaldar Railway.** En Railway, abre el servicio MySQL y copia los datos de
+conexión pública de la pestaña Variables (`MYSQL_PUBLIC_URL`, con la forma
+`mysql://usuario:clave@host:puerto/base`). Crea un archivo `.env.railway`, que
+git ya ignora, con esos datos:
+
+```
+DB_HOST=host-publico.proxy.rlwy.net
+DB_PORT=12345
+DB_USER=root
+DB_PASS=la-clave
+DB_NAME=railway
+```
+
+Y ejecuta:
+
+```bash
+node --env-file=.env.railway scripts/respaldo.js
+```
+
+Así las credenciales de producción no quedan cargadas en tu terminal, y un
+`npm run dev` posterior sigue usando tu base local.
+
+**Restaurar.** Primero prueba en una base local vacía. Restaurar sobre una base
+existente reemplaza sus tablas.
+
+```bash
+mysql --host=localhost --user=root -p biblioteca_restaurada -e "source respaldos/archivo.sql"
+```
+
+Además, revisa la pestaña Backups del servicio MySQL en Railway y programa
+respaldos automáticos si tu plan lo permite. Un respaldo manual antes de cada
+despliegue con migraciones es una buena costumbre.
+
 ## Seguridad
 
 - **Límite de intentos.** El login bloquea una IP tras 10 intentos fallidos en
@@ -88,16 +127,18 @@ biblioteca-web/
 ├── models/                      Usuario, Libro, Prestamo + relaciones (index.js)
 ├── middlewares/auth.js          verificarToken, soloAdmin, soloUsuario
 ├── middlewares/seguridad.js     helmet y límites de intentos
+├── middlewares/errores.js       manejador central de errores y 404
 ├── controllers/                 auth, usuario, libro, prestamo
 ├── routes/                      auth, usuario, libro, prestamo
 ├── utils/validar.js
-├── database/biblioteca.sql      script de la base de datos + libros de ejemplo
+├── database/biblioteca.sql      crea la base vacía (las tablas las crea la app)
 ├── database/migraciones/        cambios de la base, se aplican al arrancar
 ├── database/migrar.js           ejecuta las migraciones pendientes
 ├── database/seed.js             libros de ejemplo y administrador inicial
 ├── services/inventario.js       cálculo de ejemplares disponibles
 ├── scripts/crear-admin.js       crea o actualiza el administrador
 ├── scripts/migrar.js            aplica las migraciones pendientes
+├── scripts/respaldo.js          copia completa de la base con mysqldump
 └── public/                      frontend
     ├── css/estilos.css
     ├── js/                      api.js (compartido) + un script por página
@@ -128,7 +169,10 @@ ejemplares de los que existen.
 | GET | /prestamos | Admin: todos · Usuario: los suyos |
 | PUT | /prestamos/:id/aprobar, /prestamos/:id/devolver | Admin |
 
-Los errores siempre responden `{ "mensaje": "..." }`.
+Los errores siempre responden `{ "mensaje": "..." }`. Los controladores no
+capturan errores: lanzan `ErrorNegocio(status, mensaje)` y el manejador central
+de `middlewares/errores.js` arma la respuesta. Los errores inesperados responden
+500 sin detalles y quedan registrados con el método y la ruta.
 
 Las fechas de préstamo y devolución usan la zona horaria de la variable
 `ZONA_HORARIA`, que por defecto es `America/Lima`. No dependen del reloj del

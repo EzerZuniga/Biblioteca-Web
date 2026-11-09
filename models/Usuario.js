@@ -15,4 +15,8 @@ const Usuario = sequelize.define(
   { tableName: 'usuarios', timestamps: false }
 );
 
+Usuario.prototype.datosPublicos = function () {
+  return { id: this.id, nombre: this.nombre, email: this.email, rol: this.rol };
+};
+
 module.exports = Usuario;

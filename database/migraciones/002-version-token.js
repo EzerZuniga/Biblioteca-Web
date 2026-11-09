@@ -1,7 +1,3 @@
-// Agrega usuarios.version_token. Cada token guarda la versión vigente al
-// iniciar sesión; al cambiar la contraseña la versión sube y los tokens
-// anteriores dejan de servir. En una base nueva la columna ya la crea
-// sequelize.sync(), por eso primero se revisa si existe.
 exports.up = async ({ sequelize, transaction }) => {
   const [filas] = await sequelize.query(
     `SELECT COUNT(*) AS n FROM information_schema.COLUMNS

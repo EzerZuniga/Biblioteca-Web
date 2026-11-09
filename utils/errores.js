@@ -1,16 +1,31 @@
 class ErrorNegocio extends Error {
   constructor(status, mensaje) {
     super(mensaje);
+    this.name = "ErrorNegocio";
     this.status = status;
   }
 }
 
-const responderError = (res, error) => {
-  if (error instanceof ErrorNegocio) {
-    return res.status(error.status).json({ mensaje: error.message });
-  }
-  console.error(error);
-  return res.status(500).json({ mensaje: "Error del servidor" });
+const buscarOFallar = async (modelo, id, mensaje, opciones) => {
+  const registro = await modelo.findByPk(id, opciones);
+  if (!registro) throw new ErrorNegocio(404, mensaje);
+  return registro;
 };
 
-module.exports = { ErrorNegocio, responderError };
+// Express 4 no captura los errores de funciones async; así llegan al
+// manejador central en lugar de dejar la petición colgada.
+const capturarErrores = (controlador) =>
+  Object.fromEntries(
+    Object.entries(controlador).map(([nombre, accion]) => [
+      nombre,
+      async (req, res, next) => {
+        try {
+          await accion(req, res, next);
+        } catch (error) {
+          next(error);
+        }
+      },
+    ]),
+  );
+
+module.exports = { ErrorNegocio, buscarOFallar, capturarErrores };
