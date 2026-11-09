@@ -137,7 +137,8 @@ biblioteca-web/
 ├── database/migraciones/        cambios de la base, se aplican al arrancar
 ├── database/migrar.js           ejecuta las migraciones pendientes
 ├── database/seed.js             libros de ejemplo y administrador inicial
-├── services/inventario.js       cálculo de ejemplares disponibles
+├── services/                    lógica de negocio: auth, usuarios, libros,
+│                                prestamos e inventario (ejemplares disponibles)
 ├── scripts/crear-admin.js       crea o actualiza el administrador
 ├── scripts/migrar.js            aplica las migraciones pendientes
 ├── scripts/respaldo.js          copia completa de la base con mysqldump
@@ -171,9 +172,21 @@ ejemplares de los que existen.
 | GET | /prestamos | Admin: todos · Usuario: los suyos |
 | PUT | /prestamos/:id/aprobar, /prestamos/:id/devolver | Admin |
 
-Los errores siempre responden `{ "mensaje": "..." }`. Los controladores no
-capturan errores: lanzan `ErrorNegocio(status, mensaje)` y el manejador central
-de `middlewares/errores.js` arma la respuesta. Los errores inesperados responden
+## Capas
+
+Cada petición pasa por cuatro capas, y cada una tiene una sola responsabilidad:
+
+1. **Rutas** (`routes/`): sesión, rol y validación del esquema.
+2. **Controladores** (`controllers/`): leen la petición, llaman al servicio y
+   arman la respuesta HTTP. No tocan la base.
+3. **Servicios** (`services/`): reglas de negocio y transacciones. No saben nada
+   de HTTP, así que se pueden usar desde scripts o probar sin servidor.
+4. **Modelos** (`models/`): tablas y relaciones de Sequelize.
+
+Los servicios lanzan errores con significado (`SolicitudInvalida`,
+`NoAutenticado`, `SinPermiso`, `NoEncontrado`, `Conflicto`) y el manejador
+central de `middlewares/errores.js` los traduce a 400, 401, 403, 404 y 409.
+Los errores siempre responden `{ "mensaje": "..." }`. Los inesperados responden
 500 sin detalles y quedan registrados con el método y la ruta.
 
 Cada ruta valida su cuerpo, sus parámetros y su búsqueda con un esquema de

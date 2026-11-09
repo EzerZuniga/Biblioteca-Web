@@ -1,7 +1,7 @@
 require("dotenv").config({ quiet: true });
-const bcrypt = require("bcrypt");
-const { sequelize, Usuario } = require("../models");
+const { sequelize } = require("../models");
 const { adminDesdeEntorno } = require("../validaciones/usuarios");
+const { guardarAdmin } = require("../services/usuarios");
 
 const salir = (mensaje) => {
   console.error(mensaje);
@@ -17,23 +17,12 @@ async function main() {
   }
   const resultado = adminDesdeEntorno();
   if (!resultado.success) salir(`${resultado.error.issues[0].message}.`);
-  const { nombre, email, password } = resultado.data;
 
   await sequelize.authenticate();
-  const hash = await bcrypt.hash(password, 10);
-  const existente = await Usuario.findOne({ where: { email } });
-
-  if (existente) {
-    existente.password = hash;
-    existente.version_token += 1; // cierra las sesiones abiertas con la clave anterior
-    existente.rol = "admin";
-    if (process.env.ADMIN_NOMBRE) existente.nombre = nombre;
-    await existente.save();
-    console.log(`Administrador actualizado: ${email}`);
-  } else {
-    await Usuario.create({ nombre, email, password: hash, rol: "admin" });
-    console.log(`Administrador creado: ${email}`);
-  }
+  const accion = await guardarAdmin(resultado.data, {
+    cambiarNombre: Boolean(process.env.ADMIN_NOMBRE),
+  });
+  console.log(`Administrador ${accion}: ${resultado.data.email}`);
 }
 
 main()

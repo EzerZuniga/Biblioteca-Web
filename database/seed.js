@@ -1,9 +1,9 @@
 // Datos iniciales. Solo se insertan si hacen falta, así nunca se duplican ni
 // se borran datos. No hay cuentas con contraseña fija: el administrador sale
 // de las variables ADMIN_EMAIL y ADMIN_PASSWORD, o del comando crear-admin.
-const bcrypt = require("bcrypt");
-const { Usuario, Libro } = require("../models");
+const { Libro } = require("../models");
 const { adminDesdeEntorno } = require("../validaciones/usuarios");
+const { guardarAdmin, hayAdmin } = require("../services/usuarios");
 
 // En libros, "cantidad" es el total de ejemplares.
 const libros = [
@@ -18,7 +18,7 @@ const libros = [
 ];
 
 async function crearAdminInicial() {
-  if ((await Usuario.count({ where: { rol: "admin" } })) > 0) return;
+  if (await hayAdmin()) return;
 
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
     console.warn(
@@ -34,14 +34,8 @@ async function crearAdminInicial() {
     return;
   }
 
-  const { nombre, email, password } = resultado.data;
-  await Usuario.create({
-    nombre,
-    email,
-    password: await bcrypt.hash(password, 10),
-    rol: "admin",
-  });
-  console.log(`Administrador inicial creado: ${email}`);
+  await guardarAdmin(resultado.data, { cambiarNombre: false });
+  console.log(`Administrador inicial creado: ${resultado.data.email}`);
 }
 
 async function seed() {

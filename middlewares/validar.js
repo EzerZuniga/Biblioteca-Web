@@ -1,4 +1,4 @@
-const { ErrorNegocio } = require("../utils/errores");
+const { SolicitudInvalida } = require("../utils/errores");
 
 // Valida y normaliza body, params o query con esquemas de zod. Los campos que
 // no están en el esquema se descartan, así nadie puede colar, por ejemplo,
@@ -11,7 +11,7 @@ const validar = (esquemas) => (req, res, next) => {
         campo: issue.path.join("."),
         mensaje: issue.message,
       }));
-      return next(new ErrorNegocio(400, errores[0].mensaje, errores));
+      return next(new SolicitudInvalida(errores[0].mensaje, errores));
     }
     req[parte] = resultado.data;
   }

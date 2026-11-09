@@ -1,15 +1,47 @@
 class ErrorNegocio extends Error {
   constructor(status, mensaje, errores) {
     super(mensaje);
-    this.name = "ErrorNegocio";
+    this.name = this.constructor.name;
     this.status = status;
     this.errores = errores;
   }
 }
 
+// Los servicios lanzan estos errores por su significado; el manejador central
+// los traduce a la respuesta HTTP con el estado de cada uno.
+class SolicitudInvalida extends ErrorNegocio {
+  constructor(mensaje, errores) {
+    super(400, mensaje, errores);
+  }
+}
+
+class NoAutenticado extends ErrorNegocio {
+  constructor(mensaje) {
+    super(401, mensaje);
+  }
+}
+
+class SinPermiso extends ErrorNegocio {
+  constructor(mensaje) {
+    super(403, mensaje);
+  }
+}
+
+class NoEncontrado extends ErrorNegocio {
+  constructor(mensaje) {
+    super(404, mensaje);
+  }
+}
+
+class Conflicto extends ErrorNegocio {
+  constructor(mensaje) {
+    super(409, mensaje);
+  }
+}
+
 const buscarOFallar = async (modelo, id, mensaje, opciones) => {
   const registro = await modelo.findByPk(id, opciones);
-  if (!registro) throw new ErrorNegocio(404, mensaje);
+  if (!registro) throw new NoEncontrado(mensaje);
   return registro;
 };
 
@@ -29,4 +61,13 @@ const capturarErrores = (controlador) =>
     ]),
   );
 
-module.exports = { ErrorNegocio, buscarOFallar, capturarErrores };
+module.exports = {
+  ErrorNegocio,
+  SolicitudInvalida,
+  NoAutenticado,
+  SinPermiso,
+  NoEncontrado,
+  Conflicto,
+  buscarOFallar,
+  capturarErrores,
+};
