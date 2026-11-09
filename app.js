@@ -1,9 +1,4 @@
 require("dotenv").config({ quiet: true });
-const path = require("path");
-const express = require("express");
-const { sequelize } = require("./models");
-const { cabeceras, limiteApi } = require("./middlewares/seguridad");
-const { rutaNoEncontrada, manejarErrores } = require("./middlewares/errores");
 
 const faltantes = ["DB_NAME", "DB_USER", "JWT_SECRET"].filter(
   (nombre) => !process.env[nombre],
@@ -15,37 +10,15 @@ if (faltantes.length) {
   process.exit(1);
 }
 
-const app = express();
-
-// Railway pone un proxy delante de la app. Confiar en un salto permite leer la
-// IP real del visitante, que es la que usan los límites de intentos.
-app.set("trust proxy", 1);
-
-// El frontend se sirve desde este mismo dominio, así que no se habilita CORS:
-// otros sitios no pueden llamar a la API desde el navegador.
-app.use(cabeceras);
-app.use(express.json({ limit: "20kb" }));
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.use(["/auth", "/usuarios", "/libros", "/prestamos"], limiteApi);
-app.use("/auth", require("./routes/authRoutes"));
-app.use("/usuarios", require("./routes/usuarioRoutes"));
-app.use("/libros", require("./routes/libroRoutes"));
-app.use("/prestamos", require("./routes/prestamoRoutes"));
-
-app.use(rutaNoEncontrada);
-app.use(manejarErrores);
+const app = require("./aplicacion");
+const { sequelize } = require("./models");
+const prepararBase = require("./database/preparar");
 
 const PORT = process.env.PORT || 3000;
 
-sequelize
-  .authenticate()
-  .then(() => sequelize.sync()) // crea solo las tablas que falten; no modifica las existentes
-  .then(() => require("./database/migrar")(sequelize)) // aplica migraciones pendientes
-  .then((hechas) => hechas.forEach((m) => console.log(`Migración aplicada: ${m}`)))
-  .then(() => require("./database/seed")()) // datos iniciales solo si las tablas están vacías
-  .then(() => {
+prepararBase(sequelize)
+  .then((aplicadas) => {
+    aplicadas.forEach((m) => console.log(`Migración aplicada: ${m}`));
     console.log("Conectado a MySQL");
     app.listen(PORT, "0.0.0.0", () =>
       console.log(`Servidor listo en http://0.0.0.0:${PORT}`),

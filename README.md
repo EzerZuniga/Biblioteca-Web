@@ -15,6 +15,22 @@ Al arrancar, la app crea las tablas que falten, aplica las migraciones
 pendientes y carga los libros de ejemplo si la tabla está vacía.
 Los usuarios normales se crean desde la página de registro.
 
+## Tests
+
+```bash
+npm test                 # todos
+npm run test:unitarios   # solo los que no usan base de datos
+```
+
+Usan el test runner de Node y Supertest. Los de integración necesitan el MySQL
+local del `.env`, con un usuario que pueda crear bases. Cada archivo crea su
+propia base `biblioteca_test_<proceso>` y la borra al terminar, así que tu base
+de desarrollo no se toca y los archivos corren en paralelo.
+
+Por seguridad, los tests se niegan a correr si `DB_HOST` no es local, porque
+crean y borran bases de datos. Así un `.env` que apunte a Railway no puede
+dañar producción.
+
 ## Crear o cambiar el administrador
 
 Ni el script SQL ni el arranque crean cuentas con contraseña fija.
@@ -120,7 +136,8 @@ despliegue con migraciones es una buena costumbre.
 
 ```
 biblioteca-web/
-├── app.js                       servidor Express
+├── app.js                       punto de entrada: prepara la base y escucha
+├── aplicacion.js                arma la app de Express (la usan app.js y los tests)
 ├── package.json
 ├── .env.example                 copiar a .env
 ├── config/db.js                 conexión Sequelize -> MySQL
@@ -136,12 +153,16 @@ biblioteca-web/
 ├── database/biblioteca.sql      crea la base vacía (las tablas las crea la app)
 ├── database/migraciones/        cambios de la base, se aplican al arrancar
 ├── database/migrar.js           ejecuta las migraciones pendientes
+├── database/preparar.js         tablas + migraciones + datos iniciales
 ├── database/seed.js             libros de ejemplo y administrador inicial
 ├── services/                    lógica de negocio: auth, usuarios, libros,
 │                                prestamos e inventario (ejemplares disponibles)
 ├── scripts/crear-admin.js       crea o actualiza el administrador
 ├── scripts/migrar.js            aplica las migraciones pendientes
 ├── scripts/respaldo.js          copia completa de la base con mysqldump
+├── test/unitarios/              esquemas, errores y fechas (sin base de datos)
+├── test/integracion/            API, servicios y migraciones contra MySQL
+├── test/ayudantes/              base temporal, cliente HTTP y datos de prueba
 └── public/                      frontend
     ├── css/estilos.css
     ├── js/                      api.js (compartido) + un script por página

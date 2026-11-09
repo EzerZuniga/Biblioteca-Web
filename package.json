@@ -8,7 +8,9 @@
     "dev": "node --watch app.js",
     "crear-admin": "node scripts/crear-admin.js",
     "migrar": "node scripts/migrar.js",
-    "respaldo": "node scripts/respaldo.js"
+    "respaldo": "node scripts/respaldo.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:unitarios": "node --test \"test/unitarios/**/*.test.js\""
   },
   "license": "ISC",
   "dependencies": {
@@ -21,5 +23,8 @@
     "mysql2": "^3.24.6",
     "sequelize": "^6.37.8",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
   }
 }
