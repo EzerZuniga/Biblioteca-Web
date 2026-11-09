@@ -6,15 +6,6 @@
     <title>Biblioteca</title>
   </head>
   <body>
-    <script>
-      
-      const usuario = JSON.parse(localStorage.getItem("usuario") || "null");
-      if (!localStorage.getItem("token") || !usuario)
-        location.replace("/login.html");
-      else
-        location.replace(
-          usuario.rol === "admin" ? "/admin-prestamos.html" : "/catalogo.html",
-        );
-    </script>
+    <script src="/js/inicio.js"></script>
   </body>
 </html>

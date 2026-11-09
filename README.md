@@ -61,6 +61,22 @@ Para crear una nueva, agrega un archivo `NNN-descripcion.js` que exporte
 `up({ sequelize, transaction })`. Ojo: en MySQL los cambios de estructura
 (`ALTER TABLE`, `CREATE TABLE`) no se pueden deshacer dentro de una transacción.
 
+## Seguridad
+
+- **Límite de intentos.** El login bloquea una IP tras 10 intentos fallidos en
+  15 minutos; los ingresos correctos no cuentan. El registro permite 5 cuentas
+  por hora por IP, y la API entera 300 peticiones por minuto por IP.
+- **Cabeceras.** helmet envía una política de contenido que solo permite
+  scripts propios, protección contra clickjacking y HSTS. Por eso el HTML no
+  debe tener scripts en línea: todo va en `public/js/`.
+- **CORS cerrado.** El frontend se sirve desde el mismo dominio, así que otros
+  sitios no pueden llamar a la API desde el navegador.
+- **Proxy.** La app confía en un proxy delante (`trust proxy` = 1), que es lo que
+  pone Railway, para leer la IP real. Si agregas otro intermediario, como
+  Cloudflare, sube ese número o los límites verán la IP del intermediario.
+- Los contadores de intentos viven en memoria: se reinician al redesplegar y
+  no se comparten si algún día corres varias instancias.
+
 ## Estructura
 
 ```
@@ -71,6 +87,7 @@ biblioteca-web/
 ├── config/db.js                 conexión Sequelize -> MySQL
 ├── models/                      Usuario, Libro, Prestamo + relaciones (index.js)
 ├── middlewares/auth.js          verificarToken, soloAdmin, soloUsuario
+├── middlewares/seguridad.js     helmet y límites de intentos
 ├── controllers/                 auth, usuario, libro, prestamo
 ├── routes/                      auth, usuario, libro, prestamo
 ├── utils/validar.js
