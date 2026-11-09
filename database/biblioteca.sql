@@ -30,19 +30,6 @@ CREATE TABLE prestamos (
   CONSTRAINT fk_prestamos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
   CONSTRAINT fk_prestamos_libro FOREIGN KEY (libro_id) REFERENCES libros(id)
 ) ENGINE = InnoDB;
-INSERT INTO usuarios (nombre, email, password, rol)
-VALUES (
-    'Administrador',
-    'admin@biblioteca.com',
-    '$2b$10$l4w0llj4wahBQvlW4NK6WO/LIavEx0.RSgSg6sMkeVpNu.kDmVkJW',
-    'admin'
-  ),
-  (
-    'Usuario de prueba',
-    'usuario@biblioteca.com',
-    '$2b$10$lYcQAD.IZsmqGONX1eW9lOnsYG9/PWYs0v3itJd.Q03sLfmeq7mye',
-    'usuario'
-  );
 INSERT INTO libros (titulo, autor, categoria, cantidad)
 VALUES (
     'Cien años de soledad',

@@ -7,15 +7,39 @@ Node.js + Express + Sequelize + MySQL + bcrypt + JWT + crypto. Frontend en HTML/
 1. Instalar dependencias: `npm install`
 2. Crear la base de datos (pide la contraseña de tu MySQL): `mysql -u root -p < database/biblioteca.sql`
 3. Copiar `.env.example` a `.env` y completar `DB_PASS` (y cambiar `JWT_SECRET`).
-4. Iniciar: `npm start`  (o `npm run dev` para reiniciar solo al guardar)
-5. Abrir http://localhost:3000
+4. Crear el administrador (ver abajo).
+5. Iniciar: `npm start`  (o `npm run dev` para reiniciar solo al guardar)
+6. Abrir http://localhost:3000
 
-Cuentas de prueba (creadas por el script SQL):
+Los usuarios normales se crean desde la página de registro.
 
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | admin@biblioteca.com | Admin123 |
-| Usuario | usuario@biblioteca.com | Usuario123 |
+## Crear o cambiar el administrador
+
+El script SQL no crea cuentas. El administrador se crea con un comando que lee
+el email y la contraseña desde variables de entorno, así ninguna contraseña
+queda guardada en el repositorio. Si el email ya existe, actualiza su contraseña
+y le da rol de administrador.
+
+La contraseña debe tener al menos 10 caracteres, con letras y números.
+
+PowerShell:
+
+```powershell
+$env:ADMIN_EMAIL="admin@tu-dominio.com"; $env:ADMIN_PASSWORD="una-clave-larga-123"; npm run crear-admin
+```
+
+Bash:
+
+```bash
+ADMIN_EMAIL=admin@tu-dominio.com ADMIN_PASSWORD=una-clave-larga-123 npm run crear-admin
+```
+
+En Railway, ejecútalo dentro del servicio para que use las variables de la base de producción:
+
+```bash
+railway ssh
+ADMIN_EMAIL=admin@tu-dominio.com ADMIN_PASSWORD=una-clave-larga-123 npm run crear-admin
+```
 
 ## Estructura
 
@@ -30,7 +54,8 @@ biblioteca-web/
 ├── controllers/                 auth, usuario, libro, prestamo
 ├── routes/                      auth, usuario, libro, prestamo
 ├── utils/validar.js
-├── database/biblioteca.sql      script de la base de datos + datos iniciales
+├── database/biblioteca.sql      script de la base de datos + libros de ejemplo
+├── scripts/crear-admin.js       crea o actualiza el administrador
 └── public/                      frontend
     ├── css/estilos.css
     ├── js/                      api.js (compartido) + un script por página
