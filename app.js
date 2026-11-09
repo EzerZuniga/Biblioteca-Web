@@ -45,6 +45,8 @@ const PORT = process.env.PORT || 3000;
 sequelize
   .authenticate()
   .then(() => sequelize.sync()) // crea solo las tablas que falten; no modifica las existentes
+  .then(() => require("./database/migrar")(sequelize)) // aplica migraciones pendientes
+  .then((hechas) => hechas.forEach((m) => console.log(`Migración aplicada: ${m}`)))
   .then(() => require("./database/seed")()) // datos iniciales solo si las tablas están vacías
   .then(() => {
     console.log("Conectado a MySQL");
@@ -54,7 +56,7 @@ sequelize
   })
   .catch((error) => {
     console.error(
-      "No se pudo conectar a MySQL. Revisa tu archivo .env y que MySQL esté encendido.",
+      "No se pudo preparar la base de datos. Revisa tu archivo .env, que MySQL esté encendido y el error de abajo.",
     );
     console.error(error.message);
     process.exit(1);

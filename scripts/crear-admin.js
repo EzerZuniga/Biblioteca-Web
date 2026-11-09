@@ -1,17 +1,16 @@
 require("dotenv").config({ quiet: true });
 const bcrypt = require("bcrypt");
 const { sequelize, Usuario } = require("../models");
-const { emailValido } = require("../utils/validar");
-
-const MIN_LARGO = 10;
+const {
+  emailValido,
+  contrasenaSegura,
+  MIN_LARGO_ADMIN,
+} = require("../utils/validar");
 
 const salir = (mensaje) => {
   console.error(mensaje);
   process.exit(1);
 };
-
-const contrasenaSegura = (clave) =>
-  clave.length >= MIN_LARGO && /[a-zA-Z]/.test(clave) && /\d/.test(clave);
 
 async function main() {
   const email = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
@@ -27,7 +26,7 @@ async function main() {
   if (!emailValido(email)) salir("ADMIN_EMAIL no tiene un formato válido.");
   if (!contrasenaSegura(password)) {
     salir(
-      `ADMIN_PASSWORD debe tener al menos ${MIN_LARGO} caracteres, con letras y números.`,
+      `ADMIN_PASSWORD debe tener al menos ${MIN_LARGO_ADMIN} caracteres, con letras y números.`,
     );
   }
 

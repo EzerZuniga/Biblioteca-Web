@@ -17,7 +17,7 @@ async function cargar() {
 function pintar() {
   if (!libros.length) {
     $("cuerpo").innerHTML =
-      `<tr><td colspan="5"><div class="vacio"><strong>No hay libros registrados</strong>Usa el formulario de arriba para crear el primero.</div></td></tr>`;
+      `<tr><td colspan="6"><div class="vacio"><strong>No hay libros registrados</strong>Usa el formulario de arriba para crear el primero.</div></td></tr>`;
     return;
   }
   $("cuerpo").innerHTML = libros
@@ -27,7 +27,8 @@ function pintar() {
       <td data-label="Título"><strong>${esc(l.titulo)}</strong></td>
       <td data-label="Autor">${esc(l.autor)}</td>
       <td data-label="Categoría">${esc(l.categoria)}</td>
-      <td data-label="Cantidad">${l.cantidad}</td>
+      <td data-label="Total">${l.cantidad}</td>
+      <td data-label="Disponibles">${l.disponibles}</td>
       <td data-label="Acciones" class="acciones-celda">
         <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${l.id}">Editar</button>
         <button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${l.id}">Eliminar</button>

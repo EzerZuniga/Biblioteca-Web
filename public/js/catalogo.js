@@ -28,10 +28,10 @@ function pintar(libros, busqueda) {
         <h3>${esc(l.titulo)}</h3>
         <p class="autor">${esc(l.autor)}</p>
         <p class="categoria">${esc(l.categoria)}</p>
-        <p class="disp ${l.cantidad < 1 ? "agotado" : ""}">
-          ${l.cantidad < 1 ? "Sin ejemplares" : `${l.cantidad} ${l.cantidad === 1 ? "disponible" : "disponibles"}`}
+        <p class="disp ${l.disponibles < 1 ? "agotado" : ""}">
+          ${l.disponibles < 1 ? "Sin ejemplares" : `${l.disponibles} ${l.disponibles === 1 ? "disponible" : "disponibles"}`}
         </p>
-        <button class="btn btn-chico" data-id="${l.id}" ${l.cantidad < 1 ? "disabled" : ""}>Solicitar préstamo</button>
+        <button class="btn btn-chico" data-id="${l.id}" ${l.disponibles < 1 ? "disabled" : ""}>Solicitar préstamo</button>
       </div>
     </article>`,
     )

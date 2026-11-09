@@ -11,11 +11,20 @@ Node.js + Express + Sequelize + MySQL + bcrypt + JWT + crypto. Frontend en HTML/
 5. Iniciar: `npm start`  (o `npm run dev` para reiniciar solo al guardar)
 6. Abrir http://localhost:3000
 
+Al arrancar, la app crea las tablas que falten, aplica las migraciones
+pendientes y carga los libros de ejemplo si la tabla está vacía.
 Los usuarios normales se crean desde la página de registro.
 
 ## Crear o cambiar el administrador
 
-El script SQL no crea cuentas. El administrador se crea con un comando que lee
+Ni el script SQL ni el arranque crean cuentas con contraseña fija.
+
+**Primer administrador automático.** Si la base no tiene ningún administrador y
+están definidas las variables `ADMIN_EMAIL` y `ADMIN_PASSWORD`, la app lo crea al
+arrancar. En Railway basta con agregarlas en Variables. Cuando ya exista, puedes
+borrar `ADMIN_PASSWORD` de Railway: la app no vuelve a tocar esa cuenta.
+
+**Crear o cambiar la contraseña a mano.** El comando `crear-admin` lee
 el email y la contraseña desde variables de entorno, así ninguna contraseña
 queda guardada en el repositorio. Si el email ya existe, actualiza su contraseña
 y le da rol de administrador.
@@ -41,6 +50,17 @@ railway ssh
 ADMIN_EMAIL=admin@tu-dominio.com ADMIN_PASSWORD=una-clave-larga-123 npm run crear-admin
 ```
 
+## Migraciones
+
+Los cambios de estructura o de datos de la base viven en `database/migraciones/`.
+La app aplica en orden las que faltan cada vez que arranca y las registra en la
+tabla `migraciones`, así que nunca se aplican dos veces. También se pueden
+aplicar a mano con `npm run migrar`.
+
+Para crear una nueva, agrega un archivo `NNN-descripcion.js` que exporte
+`up({ sequelize, transaction })`. Ojo: en MySQL los cambios de estructura
+(`ALTER TABLE`, `CREATE TABLE`) no se pueden deshacer dentro de una transacción.
+
 ## Estructura
 
 ```
@@ -55,7 +75,12 @@ biblioteca-web/
 ├── routes/                      auth, usuario, libro, prestamo
 ├── utils/validar.js
 ├── database/biblioteca.sql      script de la base de datos + libros de ejemplo
+├── database/migraciones/        cambios de la base, se aplican al arrancar
+├── database/migrar.js           ejecuta las migraciones pendientes
+├── database/seed.js             libros de ejemplo y administrador inicial
+├── services/inventario.js       cálculo de ejemplares disponibles
 ├── scripts/crear-admin.js       crea o actualiza el administrador
+├── scripts/migrar.js            aplica las migraciones pendientes
 └── public/                      frontend
     ├── css/estilos.css
     ├── js/                      api.js (compartido) + un script por página
@@ -65,7 +90,13 @@ biblioteca-web/
 
 ## Flujo de un préstamo
 
-`pendiente` (usuario solicita, se genera el código con crypto) → `prestado` (admin aprueba, stock −1) → `devuelto` (admin registra devolución, stock +1).
+`pendiente` (usuario solicita, se genera el código con crypto) → `prestado` (admin aprueba) → `devuelto` (admin registra devolución).
+
+En `libros`, `cantidad` es el total de ejemplares. Los disponibles se calculan
+como `cantidad` menos los préstamos en estado `prestado`, y la API los devuelve
+en el campo `disponibles`. Aprobar un préstamo y editar un libro bloquean la
+fila del libro, así dos operaciones simultáneas no pueden prestar más
+ejemplares de los que existen.
 
 ## API
 

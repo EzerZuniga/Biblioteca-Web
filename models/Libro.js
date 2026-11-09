@@ -12,6 +12,7 @@ const Libro = sequelize.define(
       allowNull: false,
       defaultValue: "General",
     },
+    // Total de ejemplares. Los disponibles se calculan en services/inventario.js
     cantidad: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   },
   { tableName: "libros", timestamps: false },

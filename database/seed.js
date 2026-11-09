@@ -1,22 +1,11 @@
-// Datos iniciales (los mismos de database/biblioteca.sql).
-// Solo se insertan si la tabla está vacía, así nunca se duplican ni se borran datos.
+// Datos iniciales. Solo se insertan si hacen falta, así nunca se duplican ni
+// se borran datos. No hay cuentas con contraseña fija: el administrador sale
+// de las variables ADMIN_EMAIL y ADMIN_PASSWORD, o del comando crear-admin.
+const bcrypt = require("bcrypt");
 const { Usuario, Libro } = require("../models");
+const { emailValido, contrasenaSegura } = require("../utils/validar");
 
-const usuarios = [
-  {
-    nombre: "Administrador",
-    email: "admin@biblioteca.com",
-    password: "$2b$10$l4w0llj4wahBQvlW4NK6WO/LIavEx0.RSgSg6sMkeVpNu.kDmVkJW",
-    rol: "admin",
-  },
-  {
-    nombre: "Usuario de prueba",
-    email: "usuario@biblioteca.com",
-    password: "$2b$10$lYcQAD.IZsmqGONX1eW9lOnsYG9/PWYs0v3itJd.Q03sLfmeq7mye",
-    rol: "usuario",
-  },
-];
-
+// En libros, "cantidad" es el total de ejemplares.
 const libros = [
   { titulo: "Cien años de soledad", autor: "Gabriel García Márquez", categoria: "Novela", cantidad: 5 },
   { titulo: "Los ríos profundos", autor: "José María Arguedas", categoria: "Novela", cantidad: 3 },
@@ -28,15 +17,39 @@ const libros = [
   { titulo: "Breve historia del tiempo", autor: "Stephen Hawking", categoria: "Ciencia", cantidad: 0 },
 ];
 
-async function seed() {
-  if ((await Usuario.count()) === 0) {
-    await Usuario.bulkCreate(usuarios);
-    console.log("Usuarios iniciales creados");
+async function crearAdminInicial() {
+  if ((await Usuario.count({ where: { rol: "admin" } })) > 0) return;
+
+  const email = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const password = String(process.env.ADMIN_PASSWORD || "");
+  if (!email || !password) {
+    console.warn(
+      "No hay administrador. Define ADMIN_EMAIL y ADMIN_PASSWORD, o ejecuta npm run crear-admin.",
+    );
+    return;
   }
+  if (!emailValido(email) || !contrasenaSegura(password)) {
+    console.warn(
+      "No se creó el administrador: ADMIN_EMAIL no es válido o ADMIN_PASSWORD es débil.",
+    );
+    return;
+  }
+
+  await Usuario.create({
+    nombre: String(process.env.ADMIN_NOMBRE || "Administrador").trim(),
+    email,
+    password: await bcrypt.hash(password, 10),
+    rol: "admin",
+  });
+  console.log(`Administrador inicial creado: ${email}`);
+}
+
+async function seed() {
   if ((await Libro.count()) === 0) {
     await Libro.bulkCreate(libros);
     console.log("Libros iniciales creados");
   }
+  await crearAdminInicial();
 }
 
 module.exports = seed;

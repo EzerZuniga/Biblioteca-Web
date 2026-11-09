@@ -1,21 +1,8 @@
 const crypto = require("crypto");
 const { Op } = require("sequelize");
-const { sequelize, Usuario, Libro, Prestamo } = require("../models");
-
-class ErrorNegocio extends Error {
-  constructor(status, mensaje) {
-    super(mensaje);
-    this.status = status;
-  }
-}
-
-const responderError = (res, error) => {
-  if (error instanceof ErrorNegocio) {
-    return res.status(error.status).json({ mensaje: error.message });
-  }
-  console.error(error);
-  return res.status(500).json({ mensaje: "Error del servidor" });
-};
+const { Usuario, Libro, Prestamo } = require("../models");
+const { ErrorNegocio, responderError } = require("../utils/errores");
+const { contarPrestados, transaccion } = require("../services/inventario");
 
 const hoy = () => {
   const d = new Date();
@@ -48,7 +35,8 @@ exports.crear = async (req, res) => {
 
     const libro = await Libro.findByPk(libro_id);
     if (!libro) throw new ErrorNegocio(404, "El libro no existe");
-    if (libro.cantidad < 1)
+    const prestados = await contarPrestados(libro.id);
+    if (libro.cantidad - prestados < 1)
       throw new ErrorNegocio(
         400,
         "No hay ejemplares disponibles de este libro",
@@ -100,7 +88,7 @@ exports.listar = async (req, res) => {
 
 exports.aprobar = async (req, res) => {
   try {
-    const prestamo = await sequelize.transaction(async (t) => {
+    const prestamo = await transaccion(async (t) => {
       const p = await Prestamo.findByPk(req.params.id, {
         transaction: t,
         lock: t.LOCK.UPDATE,
@@ -116,14 +104,12 @@ exports.aprobar = async (req, res) => {
         transaction: t,
         lock: t.LOCK.UPDATE,
       });
-      if (!libro || libro.cantidad < 1)
+      const prestados = libro ? await contarPrestados(libro.id, t) : 0;
+      if (!libro || libro.cantidad - prestados < 1)
         throw new ErrorNegocio(
           400,
           "No quedan ejemplares disponibles para aprobar",
         );
-
-      libro.cantidad -= 1;
-      await libro.save({ transaction: t });
 
       p.estado = "prestado";
       p.fecha_prestamo = hoy();
@@ -139,7 +125,7 @@ exports.aprobar = async (req, res) => {
 
 exports.devolver = async (req, res) => {
   try {
-    const prestamo = await sequelize.transaction(async (t) => {
+    const prestamo = await transaccion(async (t) => {
       const p = await Prestamo.findByPk(req.params.id, {
         transaction: t,
         lock: t.LOCK.UPDATE,
@@ -150,15 +136,6 @@ exports.devolver = async (req, res) => {
           400,
           "Solo se pueden devolver préstamos que están prestados",
         );
-
-      const libro = await Libro.findByPk(p.libro_id, {
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      });
-      if (libro) {
-        libro.cantidad += 1;
-        await libro.save({ transaction: t });
-      }
 
       p.estado = "devuelto";
       p.fecha_devolucion = hoy();
