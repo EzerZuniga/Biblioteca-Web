@@ -12,10 +12,10 @@ const hoy = () => {
 
 const generarCodigo = () => crypto.randomBytes(4).toString("hex").toUpperCase();
 
-const codigoUnico = async () => {
+const codigoUnico = async (transaction) => {
   for (let i = 0; i < 5; i++) {
     const codigo = generarCodigo();
-    const existe = await Prestamo.findOne({ where: { codigo } });
+    const existe = await Prestamo.findOne({ where: { codigo }, transaction });
     if (!existe) return codigo;
   }
   throw new Error("No se pudo generar un código único");
@@ -33,39 +33,54 @@ exports.crear = async (req, res) => {
       throw new ErrorNegocio(400, "Indica un libro válido");
     }
 
-    const libro = await Libro.findByPk(libro_id);
-    if (!libro) throw new ErrorNegocio(404, "El libro no existe");
-    const prestados = await contarPrestados(libro.id);
-    if (libro.cantidad - prestados < 1)
-      throw new ErrorNegocio(
-        400,
-        "No hay ejemplares disponibles de este libro",
+    const prestamo = await transaccion(async (t) => {
+      // Bloquear la fila del usuario pone en fila sus solicitudes: si llegan
+      // dos a la vez, la segunda espera y luego ve la que creó la primera.
+      // Las solicitudes de otros usuarios no se bloquean entre sí.
+      const usuario = await Usuario.findByPk(req.usuario.id, {
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+      if (!usuario) throw new ErrorNegocio(401, "Inicia sesión de nuevo");
+
+      const libro = await Libro.findByPk(libro_id, { transaction: t });
+      if (!libro) throw new ErrorNegocio(404, "El libro no existe");
+      const prestados = await contarPrestados(libro.id, t);
+      if (libro.cantidad - prestados < 1)
+        throw new ErrorNegocio(
+          400,
+          "No hay ejemplares disponibles de este libro",
+        );
+
+      const activo = await Prestamo.findOne({
+        where: {
+          usuario_id: usuario.id,
+          libro_id,
+          estado: { [Op.in]: ["pendiente", "prestado"] },
+        },
+        transaction: t,
+      });
+      if (activo)
+        throw new ErrorNegocio(
+          409,
+          "Ya tienes una solicitud o un préstamo activo de este libro",
+        );
+
+      return Prestamo.create(
+        {
+          usuario_id: usuario.id,
+          libro_id,
+          codigo: await codigoUnico(t),
+          estado: "pendiente",
+        },
+        { transaction: t },
       );
-
-    const activo = await Prestamo.findOne({
-      where: {
-        usuario_id: req.usuario.id,
-        libro_id,
-        estado: { [Op.in]: ["pendiente", "prestado"] },
-      },
-    });
-    if (activo)
-      throw new ErrorNegocio(
-        409,
-        "Ya tienes una solicitud o un préstamo activo de este libro",
-      );
-
-    const codigo = await codigoUnico();
-    const prestamo = await Prestamo.create({
-      usuario_id: req.usuario.id,
-      libro_id,
-      codigo,
-      estado: "pendiente",
     });
 
-    res
-      .status(201)
-      .json({ mensaje: `Solicitud enviada. Tu código es ${codigo}`, prestamo });
+    res.status(201).json({
+      mensaje: `Solicitud enviada. Tu código es ${prestamo.codigo}`,
+      prestamo,
+    });
   } catch (error) {
     responderError(res, error);
   }
