@@ -5,7 +5,7 @@ const { emailValido } = require("../utils/validar");
 exports.listar = async (req, res) => {
   try {
     const usuarios = await Usuario.findAll({
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "version_token"] },
       order: [["id", "ASC"]],
     });
     res.json(usuarios);
@@ -64,6 +64,7 @@ exports.actualizar = async (req, res) => {
           .status(400)
           .json({ mensaje: "La contraseña debe tener al menos 6 caracteres" });
       usuario.password = await bcrypt.hash(String(password), 10);
+      usuario.version_token += 1; // cierra las sesiones abiertas con la clave anterior
     }
 
     await usuario.save();

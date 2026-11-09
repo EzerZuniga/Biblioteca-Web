@@ -36,6 +36,7 @@ async function main() {
 
   if (existente) {
     existente.password = hash;
+    existente.version_token += 1; // cierra las sesiones abiertas con la clave anterior
     existente.rol = "admin";
     if (process.env.ADMIN_NOMBRE) existente.nombre = nombre;
     await existente.save();

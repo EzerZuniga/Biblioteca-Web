@@ -75,11 +75,20 @@ exports.login = async (req, res) => {
     }
 
     const datos = { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol };
-    const token = jwt.sign(datos, process.env.JWT_SECRET, { expiresIn: "8h" });
+    const token = jwt.sign(
+      { ...datos, v: usuario.version_token },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" },
+    );
 
     res.json({ token, usuario: datos });
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: "Error del servidor" });
   }
+};
+
+exports.yo = (req, res) => {
+  const { id, nombre, rol } = req.usuario;
+  res.json({ id, nombre, rol });
 };

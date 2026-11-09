@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nombre VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
-  rol ENUM('admin', 'usuario') NOT NULL DEFAULT 'usuario'
+  rol ENUM('admin', 'usuario') NOT NULL DEFAULT 'usuario',
+  version_token INT NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS libros (

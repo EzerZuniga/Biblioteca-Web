@@ -103,6 +103,7 @@ ejemplares de los que existen.
 | Método | Ruta | Quién |
 |---|---|---|
 | POST | /auth/register, /auth/login | Público |
+| GET | /auth/yo (datos y rol actuales de la sesión) | Con sesión |
 | GET / PUT / DELETE | /usuarios, /usuarios/:id | Admin |
 | GET | /libros (`?titulo=`) | Con sesión |
 | POST / PUT / DELETE | /libros, /libros/:id | Admin |
@@ -111,6 +112,11 @@ ejemplares de los que existen.
 | PUT | /prestamos/:id/aprobar, /prestamos/:id/devolver | Admin |
 
 Los errores siempre responden `{ "mensaje": "..." }`.
+
+En cada petición con sesión, el servidor lee el usuario desde la base. Si un
+administrador cambia el rol de alguien o elimina su cuenta, el cambio aplica en
+la siguiente petición. Cambiar una contraseña cierra todas las sesiones que se
+abrieron con la contraseña anterior.
 
 ## Qué archivos toca cada integrante
 

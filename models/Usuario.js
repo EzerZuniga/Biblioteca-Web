@@ -9,6 +9,8 @@ const Usuario = sequelize.define(
     email: { type: DataTypes.STRING(150), allowNull: false, unique: true },
     password: { type: DataTypes.STRING(255), allowNull: false }, // hash de bcrypt
     rol: { type: DataTypes.ENUM('admin', 'usuario'), allowNull: false, defaultValue: 'usuario' },
+    // Sube al cambiar la contraseña; invalida los tokens emitidos antes.
+    version_token: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   },
   { tableName: 'usuarios', timestamps: false }
 );

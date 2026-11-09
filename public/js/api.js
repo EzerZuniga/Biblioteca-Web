@@ -60,8 +60,29 @@ async function api(ruta, metodo = "GET", cuerpo = null) {
     cerrarSesion();
     throw new Error(datos.mensaje || "Tu sesión expiró");
   }
+  if (respuesta.status === 403 && getToken()) {
+    await revisarRol();
+  }
   if (!respuesta.ok) throw new Error(datos.mensaje || "Ocurrió un error");
   return datos;
+}
+
+// Si un administrador cambió el rol de esta cuenta, el rol guardado en el
+// navegador quedó viejo. Se consulta el actual y se lleva al usuario a su inicio.
+async function revisarRol() {
+  try {
+    const respuesta = await fetch("/auth/yo", {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!respuesta.ok) return;
+    const actual = await respuesta.json();
+    if (getUsuario()?.rol !== actual.rol) {
+      localStorage.setItem("usuario", JSON.stringify(actual));
+      irAlInicio(actual);
+    }
+  } catch {
+    // Sin conexión: se muestra el error original.
+  }
 }
 
 function esc(valor) {
