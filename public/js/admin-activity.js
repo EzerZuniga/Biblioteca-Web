@@ -71,7 +71,7 @@ const FORMATO_FECHA = new Intl.DateTimeFormat("es-PE", {
 
 const quien = (registro) =>
   registro.actor
-    ? `${esc(registro.actor.nombre)}<br><span class="suave">${esc(registro.actor.email)}</span>`
+    ? `<span class="celda-principal">${esc(registro.actor.nombre)}</span><span class="celda-secundaria">${esc(registro.actor.email)}</span>`
     : `<span class="suave">${esc(AUTOR_SIN_CUENTA[registro.accion] || "Cuenta eliminada")}</span>`;
 
 async function cargar(pagina = paginaActual) {
@@ -87,7 +87,7 @@ async function cargar(pagina = paginaActual) {
           .map(
             (r) => `
         <tr>
-          <td data-label="Fecha">${esc(FORMATO_FECHA.format(new Date(r.creado_en)))}</td>
+          <td data-label="Fecha" class="celda-numero">${esc(FORMATO_FECHA.format(new Date(r.creado_en)))}</td>
           <td data-label="Quién">${quien(r)}</td>
           <td data-label="Qué hizo">${esc(describir(r))}</td>
         </tr>`,

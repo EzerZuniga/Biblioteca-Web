@@ -7,6 +7,8 @@ const COMPARTIDAS_DEL_FRONTEND = [
   "$",
   "api",
   "badgeEstado",
+  "celdaAcciones",
+  "celdaFechas",
   "cerrarSesion",
   "detalleEstado",
   "conConsulta",

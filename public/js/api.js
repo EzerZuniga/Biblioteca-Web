@@ -151,6 +151,30 @@ function formatearFecha(fecha) {
   return `${d}/${m}/${a}`;
 }
 
+// Fechas de un préstamo en una sola celda, cada una con su nombre y solo las
+// que existen. Sin fechas se marca "sin-dato": en móvil esa fila se oculta.
+function celdaFechas(prestamo) {
+  const fechas = [
+    ["Prestado", prestamo.fecha_prestamo],
+    ["Vence", prestamo.fecha_limite],
+    ["Devuelto", prestamo.fecha_devolucion],
+  ].filter(([, fecha]) => fecha);
+  if (!fechas.length) {
+    return '<td data-label="Fechas" class="sin-dato"><span class="suave">—</span></td>';
+  }
+  return `<td data-label="Fechas"><dl class="fechas">${fechas
+    .map(
+      ([nombre, fecha]) =>
+        `<div><dt>${nombre}</dt><dd>${formatearFecha(fecha)}</dd></div>`,
+    )
+    .join("")}</dl></td>`;
+}
+
+// Celda con los botones de una fila: en móvil ocupa todo el ancho.
+function celdaAcciones(botones) {
+  return `<td data-label="Acciones" class="td-acciones"><div class="celda-acciones">${botones}</div></td>`;
+}
+
 const TEXTO_ESTADO = {
   pendiente: "Pendiente",
   prestado: "Prestado",
@@ -170,10 +194,10 @@ function badgeEstado(estado, vencido = false) {
 function detalleEstado(prestamo) {
   if (prestamo.vencido) {
     const dias = prestamo.diasDeRetraso;
-    return `<br><span class="suave">${dias} ${dias === 1 ? "día" : "días"} de retraso</span>`;
+    return `<span class="detalle-estado retraso">${dias} ${dias === 1 ? "día" : "días"} de retraso</span>`;
   }
   if (prestamo.estado === "rechazado" && prestamo.motivo_rechazo) {
-    return `<br><span class="suave">${esc(prestamo.motivo_rechazo)}</span>`;
+    return `<span class="detalle-estado">${esc(prestamo.motivo_rechazo)}</span>`;
   }
   return "";
 }
@@ -190,9 +214,19 @@ function toast(texto, tipo = "ok") {
   aviso.className = `toast ${tipo === "error" ? "error" : ""}`;
   aviso.textContent = texto;
   caja.appendChild(aviso);
-  setTimeout(() => aviso.classList.add("sale"), 3800);
-  setTimeout(() => aviso.remove(), 4100);
+  // Sin animaciones: el aviso aparece y desaparece. Los errores duran más
+  // para que dé tiempo a leerlos.
+  setTimeout(() => aviso.remove(), tipo === "error" ? 7000 : 4000);
 }
+
+const iniciales = (nombre) =>
+  String(nombre || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte[0])
+    .join("")
+    .toUpperCase();
 
 function renderNavbar() {
   const usuario = getUsuario();
@@ -215,26 +249,40 @@ function renderNavbar() {
   barra.className = "barra";
   barra.innerHTML = `
     <div class="barra-interior">
-      <a class="marca" href="/">Biblioteca</a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="navegacion-principal" aria-label="Abrir menú">
-        <span></span>
-        <span></span>
-        <span></span>
+      <a class="marca" href="/" aria-label="BookSmart, ir al inicio">
+        <img src="/images/logo.webp" alt="" width="510" height="128" />
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal" aria-label="Abrir menú">
+        <span class="menu-icono" aria-hidden="true"></span>
+        <span class="menu-texto">Menú</span>
       </button>
-      <nav id="navegacion-principal" aria-label="Principal">
-        ${enlaces
-          .map(
-            ([href, texto]) =>
-              `<a href="${href}" ${location.pathname === href ? 'aria-current="page"' : ""}>${texto}</a>`,
-          )
-          .join("")}
-      </nav>
-      <div class="sesion" id="controles-sesion">
-        <span>${esc(usuario.nombre)}</span>
-        <button class="btn btn-secundario btn-chico" id="btnSalir" type="button">Cerrar sesión</button>
+      <div class="menu" id="menu-principal">
+        <nav aria-label="Principal">
+          ${enlaces
+            .map(
+              ([href, texto]) =>
+                `<a href="${href}" ${location.pathname === href ? 'aria-current="page"' : ""}>${texto}</a>`,
+            )
+            .join("")}
+        </nav>
+        <div class="sesion">
+          <span class="avatar" aria-hidden="true">${esc(iniciales(usuario.nombre))}</span>
+          <span class="sesion-datos">
+            <span class="sesion-nombre">${esc(usuario.nombre)}</span>
+            <span class="sesion-rol">${usuario.rol === "admin" ? "Administrador" : "Lector"}</span>
+          </span>
+          <button class="btn btn-secundario btn-chico" id="btnSalir" type="button">Cerrar sesión</button>
+        </div>
       </div>
     </div>`;
   document.body.prepend(barra);
+
+  // Para quien navega con teclado: saltar el menú e ir directo al contenido.
+  const saltar = document.createElement("a");
+  saltar.className = "saltar";
+  saltar.href = "#principal";
+  saltar.textContent = "Saltar al contenido";
+  document.body.prepend(saltar);
 
   const botonMenu = barra.querySelector(".menu-toggle");
   const cerrarMenu = () => {
@@ -264,8 +312,9 @@ function renderNavbar() {
     }
   });
 
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 900) cerrarMenu();
+  // Mismo punto de corte que el CSS: en pantallas anchas el menú no se pliega.
+  matchMedia("(min-width: 60rem)").addEventListener("change", (consulta) => {
+    if (consulta.matches) cerrarMenu();
   });
 
   $("btnSalir").addEventListener("click", cerrarSesion);

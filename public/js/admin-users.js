@@ -30,13 +30,14 @@ function pintar() {
     .map(
       (u) => `
     <tr>
-      <td data-label="Nombre"><strong>${esc(u.nombre)}</strong></td>
-      <td data-label="Email">${esc(u.email)}</td>
-      <td data-label="Rol">${u.rol === "admin" ? "Administrador" : "Usuario"}</td>
-      <td data-label="Acciones" class="acciones-celda">
-        <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${u.id}">Editar</button>
-        ${u.id === yo.id ? "" : `<button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${u.id}">Eliminar</button>`}
+      <td data-label="Usuario">
+        <span class="celda-principal">${esc(u.nombre)}${u.id === yo.id ? ' <span class="suave">(tú)</span>' : ""}</span>
+        <span class="celda-secundaria">${esc(u.email)}</span>
       </td>
+      <td data-label="Rol">${u.rol === "admin" ? '<span class="estado rol-admin">Administrador</span>' : '<span class="estado rol-lector">Lector</span>'}</td>
+      ${celdaAcciones(`
+        <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${u.id}">Editar</button>
+        ${u.id === yo.id ? "" : `<button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${u.id}">Eliminar</button>`}`)}
     </tr>`,
     )
     .join("");

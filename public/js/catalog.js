@@ -15,31 +15,32 @@ function colorLomo(categoria) {
 // "Editorial · Año", solo con los datos que el libro tenga.
 const edicion = (libro) => {
   const partes = [libro.editorial, libro.anio].filter(Boolean).map(esc);
-  return partes.length ? `<p class="suave">${partes.join(" · ")}</p>` : "";
+  return partes.length ? `<p class="edicion">${partes.join(" · ")}</p>` : "";
 };
 
 function pintar(libros, busqueda) {
   const grid = $("grid");
   if (!libros.length) {
     grid.innerHTML = busqueda
-      ? `<div class="vacio" style="grid-column:1/-1"><strong>No hay libros con “${esc(busqueda)}”</strong>Prueba con otra palabra del título, el autor o el ISBN.</div>`
-      : `<div class="vacio" style="grid-column:1/-1"><strong>El catálogo está vacío</strong>Cuando se agreguen libros, aparecerán aquí.</div>`;
+      ? `<div class="vacio vacio-ancho"><strong>No hay libros con “${esc(busqueda)}”</strong>Prueba con otra palabra del título, el autor o el ISBN.</div>`
+      : `<div class="vacio vacio-ancho"><strong>El catálogo está vacío</strong>Cuando se agreguen libros, aparecerán aquí.</div>`;
     return;
   }
   grid.innerHTML = libros
     .map(
       (l) => `
-    <article class="libro">
-      <span class="lomo" style="--color-lomo:${colorLomo(l.categoria)}"></span>
+    <article class="libro" style="--color-lomo:${colorLomo(l.categoria)}">
       <div class="libro-cuerpo">
+        <p class="categoria">${esc(l.categoria)}</p>
         <h3>${esc(l.titulo)}</h3>
         <p class="autor">${esc(l.autor)}</p>
-        <p class="categoria">${esc(l.categoria)}</p>
         ${edicion(l)}
-        <p class="disp ${l.disponibles < 1 ? "agotado" : ""}">
-          ${l.disponibles < 1 ? "Sin ejemplares" : `${l.disponibles} ${l.disponibles === 1 ? "disponible" : "disponibles"}`}
-        </p>
-        <button class="btn btn-chico" data-id="${l.id}" ${l.disponibles < 1 ? "disabled" : ""}>Solicitar préstamo</button>
+        <div class="libro-pie">
+          <span class="disponibilidad ${l.disponibles < 1 ? "agotado" : ""}">
+            ${l.disponibles < 1 ? "Sin ejemplares disponibles" : `${l.disponibles} ${l.disponibles === 1 ? "disponible" : "disponibles"}`}
+          </span>
+          <button class="btn" data-id="${l.id}" ${l.disponibles < 1 ? "disabled" : ""}>Solicitar préstamo</button>
+        </div>
       </div>
     </article>`,
     )

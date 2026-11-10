@@ -53,13 +53,13 @@ function acciones(p) {
   if (p.estado === "prestado") {
     return `<button class="btn btn-secundario btn-chico" data-accion="devolver" data-id="${p.id}">Registrar devolución</button>`;
   }
-  return '<span class="suave">—</span>';
+  return "";
 }
 
 function pintar() {
   if (!prestamos.length) {
     $("cuerpo").innerHTML =
-      `<tr><td colspan="8"><div class="vacio"><strong>No hay préstamos para mostrar</strong>Cuando un usuario solicite un libro, aparecerá aquí.</div></td></tr>`;
+      `<tr><td colspan="6"><div class="vacio"><strong>No hay préstamos para mostrar</strong>Cuando un usuario solicite un libro, aparecerá aquí.</div></td></tr>`;
     return;
   }
 
@@ -68,13 +68,11 @@ function pintar() {
       (p) => `
       <tr>
         <td data-label="Código"><span class="codigo">${esc(p.codigo)}</span></td>
-        <td data-label="Usuario">${esc(p.Usuario?.nombre)}<br><span class="suave">${esc(p.Usuario?.email)}</span></td>
-        <td data-label="Libro">${esc(p.Libro?.titulo)}</td>
+        <td data-label="Libro"><span class="celda-principal">${esc(p.Libro?.titulo)}</span></td>
+        <td data-label="Lector">${esc(p.Usuario?.nombre)}<span class="celda-secundaria">${esc(p.Usuario?.email)}</span></td>
         <td data-label="Estado">${badgeEstado(p.estado, p.vencido)}${detalleEstado(p)}</td>
-        <td data-label="Préstamo">${formatearFecha(p.fecha_prestamo)}</td>
-        <td data-label="Vence">${formatearFecha(p.fecha_limite)}</td>
-        <td data-label="Devolución">${formatearFecha(p.fecha_devolucion)}</td>
-        <td data-label="Acción" class="acciones-celda">${acciones(p)}</td>
+        ${celdaFechas(p)}
+        ${acciones(p) ? celdaAcciones(acciones(p)) : '<td data-label="Acciones" class="sin-dato"><span class="suave">—</span></td>'}
       </tr>`,
     )
     .join("");

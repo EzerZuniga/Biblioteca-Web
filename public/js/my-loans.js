@@ -7,8 +7,10 @@ if (protegerPagina("usuario")) {
 
 const accion = (p) =>
   p.estado === "pendiente"
-    ? `<button class="btn btn-secundario btn-chico" data-cancelar="${p.id}">Cancelar</button>`
-    : '<span class="suave">—</span>';
+    ? celdaAcciones(
+        `<button class="btn btn-secundario btn-chico" data-cancelar="${p.id}">Cancelar solicitud</button>`,
+      )
+    : '<td data-label="Acciones" class="sin-dato"><span class="suave">—</span></td>';
 
 async function cargar(pagina = paginaActual) {
   try {
@@ -37,18 +39,16 @@ async function cargar(pagina = paginaActual) {
 
     $("contenido").innerHTML = `${aviso}
       <div class="tabla-wrap"><table>
-        <thead><tr><th>Código</th><th>Libro</th><th>Estado</th><th>Fecha de préstamo</th><th>Vence</th><th>Fecha de devolución</th><th>Acción</th></tr></thead>
+        <thead><tr><th>Código</th><th>Libro</th><th>Estado</th><th>Fechas</th><th>Acciones</th></tr></thead>
         <tbody>${prestamos
           .map(
             (p) => `
           <tr>
               <td data-label="Código"><span class="codigo">${esc(p.codigo)}</span></td>
-              <td data-label="Libro"><strong>${esc(p.Libro?.titulo)}</strong><br><span class="suave">${esc(p.Libro?.autor)}</span></td>
+              <td data-label="Libro"><span class="celda-principal">${esc(p.Libro?.titulo)}</span><span class="celda-secundaria">${esc(p.Libro?.autor)}</span></td>
               <td data-label="Estado">${badgeEstado(p.estado, p.vencido)}${detalleEstado(p)}</td>
-              <td data-label="Fecha de préstamo">${formatearFecha(p.fecha_prestamo)}</td>
-              <td data-label="Vence">${formatearFecha(p.fecha_limite)}</td>
-              <td data-label="Fecha de devolución">${formatearFecha(p.fecha_devolucion)}</td>
-              <td data-label="Acción">${accion(p)}</td>
+              ${celdaFechas(p)}
+              ${accion(p)}
           </tr>`,
           )
           .join("")}

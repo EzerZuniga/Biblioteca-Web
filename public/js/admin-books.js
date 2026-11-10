@@ -25,22 +25,22 @@ async function cargar(pagina = paginaActual) {
 function pintar() {
   if (!libros.length) {
     $("cuerpo").innerHTML =
-      `<tr><td colspan="6"><div class="vacio"><strong>No hay libros registrados</strong>Usa el formulario de arriba para crear el primero.</div></td></tr>`;
+      `<tr><td colspan="4"><div class="vacio"><strong>No hay libros registrados</strong>Usa el formulario de arriba para crear el primero.</div></td></tr>`;
     return;
   }
   $("cuerpo").innerHTML = libros
     .map(
       (l) => `
     <tr>
-      <td data-label="Título"><strong>${esc(l.titulo)}</strong>${l.isbn ? `<br><span class="suave">ISBN ${esc(l.isbn)}</span>` : ""}</td>
-      <td data-label="Autor">${esc(l.autor)}</td>
-      <td data-label="Categoría">${esc(l.categoria)}</td>
-      <td data-label="Total">${l.cantidad}</td>
-      <td data-label="Disponibles">${l.disponibles}</td>
-      <td data-label="Acciones" class="acciones-celda">
-        <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${l.id}">Editar</button>
-        <button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${l.id}">Eliminar</button>
+      <td data-label="Libro">
+        <span class="celda-principal">${esc(l.titulo)}</span>
+        <span class="celda-secundaria">${esc(l.autor)}${l.isbn ? ` · ISBN ${esc(l.isbn)}` : ""}</span>
       </td>
+      <td data-label="Categoría">${esc(l.categoria)}</td>
+      <td data-label="Ejemplares" class="celda-numero">${l.disponibles} de ${l.cantidad} disponibles</td>
+      ${celdaAcciones(`
+        <button class="btn btn-secundario btn-chico" data-accion="editar" data-id="${l.id}">Editar</button>
+        <button class="btn btn-peligro btn-chico" data-accion="eliminar" data-id="${l.id}">Eliminar</button>`)}
     </tr>`,
     )
     .join("");

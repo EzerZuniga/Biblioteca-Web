@@ -3,23 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Iniciar sesión - Biblioteca</title>
-    <link rel="stylesheet" href="/css/styles.css?v=recuperacion" />
+    <title>Iniciar sesión · BookSmart</title>
+    <meta
+      name="description"
+      content="Inicia sesión en BookSmart para pedir libros de la biblioteca."
+    />
+    <meta name="theme-color" content="#1d4ed8" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/css/styles.css?v=diseno" />
   </head>
   <body>
-    <main class="auth">
-      <section class="auth-lado">
-        <h1>Encuentra tu libro y pídelo desde aquí.</h1>
-        <p>
-          Busca en el catálogo, solicita el préstamo y recógelo cuando un
-          administrador lo apruebe.
-        </p>
-        <p>Cada préstamo recibe un código como este:</p>
-        <span class="codigo">A7F3C91D</span>
-      </section>
+    <main class="auth" id="principal">
       <section class="auth-form">
         <form id="formLogin" novalidate>
-          <h2>Inicia sesión</h2>
+          <a class="auth-logo" href="/"
+            ><img
+              src="/images/logo.webp"
+              alt="BookSmart"
+              width="510"
+              height="128"
+          /></a>
+          <h1>Inicia sesión</h1>
           <p id="aviso" class="aviso" role="status" hidden></p>
           <p id="error" class="error" role="alert" hidden></p>
           <label
@@ -46,8 +51,17 @@
           </p>
         </form>
       </section>
+      <section class="auth-lado">
+        <h2>Encuentra tu libro y pídelo desde aquí.</h2>
+        <p>
+          Busca en el catálogo, solicita el préstamo y recógelo cuando un
+          administrador lo apruebe.
+        </p>
+        <p>Cada préstamo recibe un código como este:</p>
+        <span class="codigo">A7F3C91D</span>
+      </section>
     </main>
-    <script src="/js/api.js?v=recuperacion"></script>
-    <script src="/js/login.js?v=recuperacion"></script>
+    <script src="/js/api.js?v=diseno"></script>
+    <script src="/js/login.js?v=diseno"></script>
   </body>
 </html>

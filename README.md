@@ -181,6 +181,30 @@ Además, revisa la pestaña Backups del servicio MySQL en Railway y programa
 respaldos automáticos si tu plan lo permite. Un respaldo manual antes de cada
 despliegue con migraciones es una buena costumbre.
 
+## Frontend
+
+HTML, CSS y JavaScript sin frameworks ni paso de compilación. Todo el diseño
+vive en `public/css/styles.css`, organizado como un sistema de diseño:
+variables (colores del logo, espaciados, tipografía), base, componentes y
+páginas.
+
+- **Móvil primero.** Puntos de corte en 40rem (640px), 60rem (960px, menú
+  plegable) y 64rem (1024px). Por debajo de 1024px las tablas se muestran como
+  tarjetas, en dos columnas en tableta, y los campos vacíos se ocultan.
+- **Sin animaciones ni transiciones.** Un test lo verifica.
+- **Accesibilidad.** Contraste AA, foco visible, enlace "Saltar al contenido",
+  botones de al menos 44px en pantallas táctiles e imágenes con tamaño
+  declarado para que la página no se mueva al cargar.
+- **Imágenes optimizadas.** `images/logo.webp` (32 KB) en lugar del PNG
+  original (690 KB), y `favicon.png` y `apple-touch-icon.png` sacados del
+  ícono del logo.
+- **Código compartido.** `public/js/api.js` tiene el cliente de la API, el
+  encabezado, los avisos, la paginación y las celdas comunes de las tablas;
+  cada página tiene su propio script.
+
+Al cambiar un `.js` o el `.css`, sube el `?v=` de las páginas que lo cargan para
+que los navegadores no usen la copia vieja.
+
 ## Seguridad
 
 - **Límite de intentos.** El login bloquea una IP tras 10 intentos fallidos en

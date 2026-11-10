@@ -24,7 +24,7 @@ describe("páginas del frontend", () => {
   it("todo enlace interno apunta a un archivo que existe", () => {
     const fuentes = [...archivosDe(".", ".html"), ...archivosDe("js", ".js")];
     const enlace =
-      /["'`(]\/((?:[\w-]+\/)*[\w-]+\.(?:html|js|css|png|jpg|svg))/g;
+      /["'`(]\/((?:[\w-]+\/)*[\w-]+\.(?:html|js|css|png|jpg|svg|webp))/g;
     const rotos = [];
 
     for (const fuente of fuentes) {
@@ -36,6 +36,48 @@ describe("páginas del frontend", () => {
       }
     }
     assert.deepEqual(rotos, []);
+  });
+});
+
+describe("reglas de diseño", () => {
+  const leer = (archivo) => fs.readFileSync(path.join(PUBLIC, archivo), "utf8");
+
+  it("la interfaz no tiene animaciones ni transiciones", () => {
+    const css = leer("css/styles.css");
+    assert.doesNotMatch(css, /\btransition\s*:|\banimation\s*:|@keyframes/);
+  });
+
+  it("cada página cumple lo básico de accesibilidad y adaptabilidad", () => {
+    for (const pagina of archivosDe(".", ".html")) {
+      const html = leer(pagina);
+      assert.match(html, /<html lang="es">/, `${pagina}: idioma`);
+      assert.match(
+        html,
+        /<meta name="viewport" content="width=device-width, initial-scale=1"/,
+        `${pagina}: viewport`,
+      );
+      assert.match(html, /<title>[^<]+<\/title>/, `${pagina}: título`);
+      assert.match(html, /rel="icon"/, `${pagina}: favicon`);
+      assert.doesNotMatch(html, /<script>/, `${pagina}: script en línea`);
+      if (pagina !== "index.html") {
+        assert.match(
+          html,
+          /<main [^>]*id="principal"/,
+          `${pagina}: destino del enlace "Saltar al contenido"`,
+        );
+      }
+    }
+  });
+
+  it("cada imagen del HTML declara su tamaño para no mover la página al cargar", () => {
+    const fuentes = [...archivosDe(".", ".html"), "js/api.js"];
+    for (const fuente of fuentes) {
+      for (const [img] of leer(fuente).matchAll(/<img [^>]*>/g)) {
+        assert.match(img, /width="\d+"/, `${fuente}: ${img}`);
+        assert.match(img, /height="\d+"/, `${fuente}: ${img}`);
+        assert.match(img, /alt="/, `${fuente}: ${img}`);
+      }
+    }
   });
 });
 
