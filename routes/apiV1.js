@@ -8,5 +8,6 @@ router.use("/auth", require("./authRoutes"));
 router.use("/usuarios", require("./userRoutes"));
 router.use("/libros", require("./bookRoutes"));
 router.use("/prestamos", require("./loanRoutes"));
+router.use("/auditoria", require("./auditRoutes"));
 
 module.exports = router;

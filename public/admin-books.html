@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Libros - Biblioteca</title>
-    <link rel="stylesheet" href="/css/styles.css?v=vencimientos" />
+    <link rel="stylesheet" href="/css/styles.css?v=auditoria" />
   </head>
   <body>
     <main class="contenedor">
@@ -33,6 +33,21 @@
                 id="categoria"
                 maxlength="100"
                 placeholder="Ej. Novela"
+            /></label>
+            <label
+              >ISBN
+              <input
+                type="text"
+                id="isbn"
+                maxlength="20"
+                inputmode="numeric"
+                placeholder="Ej. 978-0-06-088328-7"
+            /></label>
+            <label
+              >Editorial <input type="text" id="editorial" maxlength="150"
+            /></label>
+            <label
+              >Año <input type="number" id="anio" min="1000" max="2100"
             /></label>
             <label
               >Ejemplares totales
@@ -77,7 +92,7 @@
         hidden
       ></nav>
     </main>
-    <script src="/js/api.js?v=vencimientos"></script>
-    <script src="/js/admin-books.js?v=vencimientos"></script>
+    <script src="/js/api.js?v=auditoria"></script>
+    <script src="/js/admin-books.js?v=auditoria"></script>
   </body>
 </html>

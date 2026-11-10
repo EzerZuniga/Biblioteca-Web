@@ -188,17 +188,19 @@ biblioteca-web/
 ├── server.js                    punto de entrada: prepara la base y escucha
 ├── app.js                       arma la app de Express (la usan server.js y los tests)
 ├── config/                      db (conexión Sequelize -> MySQL), session y loans
-├── models/                      User, Book, Loan + relaciones (index.js)
+├── models/                      User, Book, Loan, AuditEntry + relaciones
 ├── railway.json                 despliegue: healthcheck, apagado y reinicios
 ├── routes/                      apiV1 (agrupa auth, users, books, loans),
 │                                health y legacyRedirects
 ├── middlewares/                 auth, security, errors, validate, requestLogger
-├── validators/                  esquemas zod: auth, users, books, loans, common
+├── validators/                  esquemas zod: auth, users, books, loans,
+│                                audit, common
 ├── controllers/                 auth, user, book, loan
 ├── services/                    lógica de negocio: auth, users, books, loans,
-│                                inventory (ejemplares disponibles), pagination
-├── utils/                       errors, dates, logger, shutdown, serverState,
-│                                sessionCookie
+│                                inventory (ejemplares disponibles), audit,
+│                                pagination, transaction
+├── utils/                       errors, dates, isbn, logger, shutdown,
+│                                serverState, sessionCookie
 ├── database/create-database.sql crea la base vacía (las tablas las crea la app)
 ├── database/migrations/         cambios de la base, se aplican al arrancar
 ├── database/migrate.js          ejecuta las migraciones pendientes
@@ -261,13 +263,14 @@ que pide recargar la página.
 | POST                | /auth/register, /auth/login, /auth/logout            | Público                           |
 | GET                 | /auth/yo (datos y rol actuales de la sesión)         | Con sesión                        |
 | GET / PUT / DELETE  | /usuarios, /usuarios/:id                             | Admin                             |
-| GET                 | /libros (`?titulo=`)                                 | Con sesión                        |
+| GET                 | /libros (`?buscar=`: título, autor o ISBN)           | Con sesión                        |
 | POST / PUT / DELETE | /libros, /libros/:id                                 | Admin                             |
 | POST                | /prestamos                                           | Usuario                           |
 | GET                 | /prestamos (`?estado=`, también `vencido`)           | Admin: todos · Usuario: los suyos |
 | GET                 | /prestamos/resumen (pendientes, prestados, vencidos) | Admin                             |
 | PUT                 | /prestamos/:id/aprobar, /rechazar, /devolver         | Admin                             |
 | PUT                 | /prestamos/:id/cancelar                              | Usuario (solo los suyos)          |
+| GET                 | /auditoria (`?entidad=prestamo\|libro\|usuario`)     | Admin                             |
 
 **Paginación.** Los listados (`GET /libros`, `/prestamos` y `/usuarios`) aceptan
 `?pagina=` (desde 1) y `?porPagina=` (de 1 a 100, por defecto 20), y responden:
@@ -278,6 +281,24 @@ que pide recargar la página.
   "paginacion": { "pagina": 1, "porPagina": 20, "total": 23, "totalPaginas": 2 }
 }
 ```
+
+## Auditoría
+
+- **Marcas de tiempo.** Usuarios, libros y préstamos guardan `creado_en` y
+  `actualizado_en`. En las filas que existían antes de la migración 005 quedó
+  la fecha de esa migración, porque la real no se conocía.
+- **Registro de actividad.** La tabla `auditoria` guarda quién hizo cada acción
+  y cuándo: solicitar, aprobar, rechazar, cancelar y devolver préstamos; crear,
+  editar y eliminar libros; registrar, editar y eliminar usuarios; y los cambios
+  de administrador hechos desde la consola. Cada registro se escribe en la misma
+  transacción que la acción: si la acción falla, no queda registro, y no hay
+  acciones sin registrar.
+- **Detalles que no se pierden.** Cada registro guarda lo necesario para
+  entenderse solo (título del libro, código del préstamo, email del usuario, qué
+  campos cambiaron), aunque después se elimine el libro o la cuenta. Las
+  contraseñas nunca se guardan: solo que se cambiaron.
+- **Dónde verlo.** La página **Actividad** del administrador, con filtro por
+  préstamos, libros o usuarios.
 
 ## Operación
 

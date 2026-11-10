@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const MARCAS_DE_TIEMPO = require("./timestamps");
 
 // "vencido" no es un estado guardado: es un préstamo "prestado" cuya
 // fecha_limite ya pasó. Se calcula al consultar, así nunca queda desactualizado.
@@ -24,7 +25,7 @@ const Prestamo = sequelize.define(
   },
   {
     tableName: "prestamos",
-    timestamps: false,
+    ...MARCAS_DE_TIEMPO,
     indexes: [
       // Para encontrar rápido los préstamos vencidos.
       {

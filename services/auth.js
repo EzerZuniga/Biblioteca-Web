@@ -3,18 +3,29 @@ const { Usuario } = require("../models");
 const { NoAutenticado } = require("../utils/errors");
 const { cifrar, verificarPassword, exigirEmailLibre } = require("./users");
 const { DURACION_SESION_SEGUNDOS } = require("../config/session");
+const { transaccion } = require("./transaction");
+const auditoria = require("./audit");
 
-const registrar = async ({ nombre, email, password }) => {
-  await exigirEmailLibre(email, "Ese email ya está registrado");
+const registrar = ({ nombre, email, password }) =>
+  transaccion(async (t) => {
+    await exigirEmailLibre(email, "Ese email ya está registrado", t);
 
-  const usuario = await Usuario.create({
-    nombre,
-    email,
-    password: await cifrar(password),
-    rol: "usuario",
+    const usuario = await Usuario.create(
+      { nombre, email, password: await cifrar(password), rol: "usuario" },
+      { transaction: t },
+    );
+    await auditoria.registrar(
+      {
+        actorId: usuario.id,
+        accion: "usuario.registrado",
+        entidad: "usuario",
+        entidadId: usuario.id,
+        detalles: { email },
+      },
+      t,
+    );
+    return usuario.datosPublicos();
   });
-  return usuario.datosPublicos();
-};
 
 const iniciarSesion = async ({ email, password }) => {
   const usuario = await Usuario.findOne({ where: { email } });

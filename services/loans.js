@@ -8,7 +8,9 @@ const {
   Conflicto,
   buscarOFallar,
 } = require("../utils/errors");
-const { contarPrestados, transaccion } = require("./inventory");
+const { contarPrestados } = require("./inventory");
+const { transaccion } = require("./transaction");
+const auditoria = require("./audit");
 const { paginar } = require("./pagination");
 const { fechaLocal, sumarDias, diasEntre } = require("../utils/dates");
 const { DIAS_PRESTAMO, MAX_PRESTAMOS_ACTIVOS } = require("../config/loans");
@@ -48,6 +50,25 @@ const codigoUnico = async (transaction) => {
 const exigirDisponible = async (libro, transaction, mensaje) => {
   const prestados = await contarPrestados(libro.id, transaction);
   if (libro.cantidad - prestados < 1) throw new SolicitudInvalida(mensaje);
+};
+
+// Deja constancia de una acción sobre un préstamo, con el título del libro
+// para que se entienda aunque el libro cambie después.
+const registrarAccion = async (prestamo, accion, { actorId, extra }, t) => {
+  const libro = await Libro.findByPk(prestamo.libro_id, {
+    attributes: ["titulo"],
+    transaction: t,
+  });
+  await auditoria.registrar(
+    {
+      actorId,
+      accion: `prestamo.${accion}`,
+      entidad: "prestamo",
+      entidadId: prestamo.id,
+      detalles: { codigo: prestamo.codigo, libro: libro?.titulo, ...extra },
+    },
+    t,
+  );
 };
 
 const bloquearPrestamo = (id, t) =>
@@ -115,6 +136,7 @@ const solicitar = (usuarioId, libroId) =>
       },
       { transaction: t },
     );
+    await registrarAccion(prestamo, "solicitado", { actorId: usuario.id }, t);
     return conVencimiento(prestamo);
   });
 
@@ -163,7 +185,7 @@ const exigirPendiente = (prestamo, accion) => {
   }
 };
 
-const aprobar = (id) =>
+const aprobar = (id, { actorId } = {}) =>
   transaccion(async (t) => {
     const prestamo = await bloquearPrestamo(id, t);
     exigirPendiente(prestamo, "aprobar");
@@ -185,10 +207,16 @@ const aprobar = (id) =>
     prestamo.fecha_prestamo = hoy;
     prestamo.fecha_limite = sumarDias(hoy, DIAS_PRESTAMO);
     await prestamo.save({ transaction: t });
+    await registrarAccion(
+      prestamo,
+      "aprobado",
+      { actorId, extra: { fechaLimite: prestamo.fecha_limite } },
+      t,
+    );
     return conVencimiento(prestamo, hoy);
   });
 
-const rechazar = (id, { motivo } = {}) =>
+const rechazar = (id, { motivo, actorId } = {}) =>
   transaccion(async (t) => {
     const prestamo = await bloquearPrestamo(id, t);
     exigirPendiente(prestamo, "rechazar");
@@ -196,6 +224,12 @@ const rechazar = (id, { motivo } = {}) =>
     prestamo.estado = "rechazado";
     prestamo.motivo_rechazo = motivo ?? null;
     await prestamo.save({ transaction: t });
+    await registrarAccion(
+      prestamo,
+      "rechazado",
+      { actorId, extra: { motivo: prestamo.motivo_rechazo } },
+      t,
+    );
     return conVencimiento(prestamo);
   });
 
@@ -211,10 +245,11 @@ const cancelar = (id, usuarioId) =>
 
     prestamo.estado = "cancelado";
     await prestamo.save({ transaction: t });
+    await registrarAccion(prestamo, "cancelado", { actorId: usuarioId }, t);
     return conVencimiento(prestamo);
   });
 
-const devolver = (id) =>
+const devolver = (id, { actorId } = {}) =>
   transaccion(async (t) => {
     const prestamo = await bloquearPrestamo(id, t);
     if (prestamo.estado !== "prestado") {
@@ -223,9 +258,16 @@ const devolver = (id) =>
       );
     }
 
+    const { diasDeRetraso } = conVencimiento(prestamo);
     prestamo.estado = "devuelto";
     prestamo.fecha_devolucion = fechaLocal();
     await prestamo.save({ transaction: t });
+    await registrarAccion(
+      prestamo,
+      "devuelto",
+      { actorId, extra: { diasDeRetraso } },
+      t,
+    );
     return conVencimiento(prestamo);
   });
 

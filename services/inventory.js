@@ -1,4 +1,3 @@
-const { Transaction } = require("sequelize");
 const { sequelize, Prestamo } = require("../models");
 
 // En libros, "cantidad" es el total de ejemplares que tiene la biblioteca.
@@ -23,17 +22,4 @@ const conDisponibles = (libro, prestados) => {
   return datos;
 };
 
-// READ COMMITTED hace que el conteo vea los préstamos confirmados por otras
-// transacciones después de obtener el bloqueo de la fila del libro.
-const transaccion = (fn) =>
-  sequelize.transaction(
-    { isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED },
-    fn,
-  );
-
-module.exports = {
-  prestadosLiteral,
-  contarPrestados,
-  conDisponibles,
-  transaccion,
-};
+module.exports = { prestadosLiteral, contarPrestados, conDisponibles };

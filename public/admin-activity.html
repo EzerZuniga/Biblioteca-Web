@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Actividad - Biblioteca</title>
+    <link rel="stylesheet" href="/css/styles.css?v=auditoria" />
+  </head>
+  <body>
+    <main class="contenedor">
+      <div class="encabezado">
+        <div>
+          <h1>Actividad</h1>
+          <p class="suave">
+            Quién hizo cada cambio en préstamos, libros y usuarios.
+          </p>
+        </div>
+        <label
+          >Mostrar
+          <select id="filtro">
+            <option value="">Todo</option>
+            <option value="prestamo">Préstamos</option>
+            <option value="libro">Libros</option>
+            <option value="usuario">Usuarios</option>
+          </select>
+        </label>
+      </div>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Quién</th>
+              <th>Qué hizo</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo"></tbody>
+        </table>
+      </div>
+      <nav
+        class="paginacion"
+        id="paginacion"
+        aria-label="Paginación"
+        hidden
+      ></nav>
+    </main>
+    <script src="/js/api.js?v=auditoria"></script>
+    <script src="/js/admin-activity.js?v=auditoria"></script>
+  </body>
+</html>

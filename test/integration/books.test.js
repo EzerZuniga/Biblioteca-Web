@@ -171,3 +171,67 @@ describe("DELETE /libros/:id", () => {
     assert.equal(res.status, 409);
   });
 });
+
+describe("datos bibliográficos y búsqueda", () => {
+  it("guarda ISBN, editorial y año, y rechaza un ISBN repetido", async () => {
+    const admin = await crearAdmin();
+    const crear = (titulo) =>
+      api.post("/api/v1/libros", {
+        token: admin.token,
+        cuerpo: {
+          titulo,
+          autor: "García Márquez",
+          isbn: "978-0-06-088328-7",
+          editorial: "Harper",
+          anio: 2006,
+          cantidad: 1,
+        },
+      });
+
+    const primero = await crear("Cien años de soledad");
+    assert.equal(primero.status, 201);
+    assert.equal(primero.body.libro.isbn, "9780060883287");
+    assert.equal(primero.body.libro.anio, 2006);
+
+    const repetido = await crear("Otra edición");
+    assert.equal(repetido.status, 409);
+    assert.match(repetido.body.mensaje, /Cien años de soledad/);
+  });
+
+  it("busca por título, autor o ISBN con o sin guiones", async () => {
+    const lector = await crearLector();
+    const libro = await crearLibro({
+      titulo: "Cien años de soledad",
+      autor: "Gabriel García Márquez",
+      isbn: "9780060883287",
+    });
+    await crearLibro({ titulo: "Otro", autor: "Otra persona" });
+
+    for (const texto of [
+      "soledad",
+      "márquez",
+      "978-0-06-088328-7",
+      "0883287",
+    ]) {
+      const res = await api.get(
+        `/api/v1/libros?buscar=${encodeURIComponent(texto)}`,
+        { token: lector.token },
+      );
+      assert.deepEqual(
+        res.body.datos.map((l) => l.id),
+        [libro.id],
+        texto,
+      );
+    }
+  });
+
+  it("un ISBN vacío en la edición lo borra", async () => {
+    const admin = await crearAdmin();
+    const libro = await crearLibro({ isbn: "0132350882" });
+    const res = await api.put(`/api/v1/libros/${libro.id}`, {
+      token: admin.token,
+      cuerpo: { isbn: "" },
+    });
+    assert.equal(res.body.libro.isbn, null);
+  });
+});

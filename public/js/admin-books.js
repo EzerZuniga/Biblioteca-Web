@@ -32,7 +32,7 @@ function pintar() {
     .map(
       (l) => `
     <tr>
-      <td data-label="Título"><strong>${esc(l.titulo)}</strong></td>
+      <td data-label="Título"><strong>${esc(l.titulo)}</strong>${l.isbn ? `<br><span class="suave">ISBN ${esc(l.isbn)}</span>` : ""}</td>
       <td data-label="Autor">${esc(l.autor)}</td>
       <td data-label="Categoría">${esc(l.categoria)}</td>
       <td data-label="Total">${l.cantidad}</td>
@@ -64,6 +64,9 @@ $("formLibro").addEventListener("submit", async (e) => {
     titulo: $("titulo").value,
     autor: $("autor").value,
     categoria: $("categoria").value,
+    isbn: $("isbn").value,
+    editorial: $("editorial").value,
+    anio: $("anio").value,
     cantidad: $("cantidad").value,
   };
   try {
@@ -89,6 +92,9 @@ $("cuerpo").addEventListener("click", async (e) => {
     $("titulo").value = libro.titulo;
     $("autor").value = libro.autor;
     $("categoria").value = libro.categoria;
+    $("isbn").value = libro.isbn ?? "";
+    $("editorial").value = libro.editorial ?? "";
+    $("anio").value = libro.anio ?? "";
     $("cantidad").value = libro.cantidad;
     $("tituloForm").textContent = "Editar libro";
     $("btnGuardar").textContent = "Guardar cambios";

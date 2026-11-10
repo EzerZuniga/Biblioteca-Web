@@ -103,6 +103,41 @@ describe("migrar una base antigua", () => {
     assert.ok(indices.some((i) => i.nombre === "idx_prestamos_estado_limite"));
   });
 
+  it("agrega datos bibliográficos, marcas de tiempo y la tabla de auditoría", async () => {
+    const columnas = await bd.consultar(
+      `SELECT TABLE_NAME AS tabla, COLUMN_NAME AS columna
+         FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND COLUMN_NAME IN ('isbn', 'editorial', 'anio', 'creado_en', 'actualizado_en')`,
+    );
+    const de = (tabla) =>
+      columnas
+        .filter((c) => c.tabla === tabla)
+        .map((c) => c.columna)
+        .sort();
+    assert.deepEqual(de("libros"), [
+      "actualizado_en",
+      "anio",
+      "creado_en",
+      "editorial",
+      "isbn",
+    ]);
+    assert.deepEqual(de("usuarios"), ["actualizado_en", "creado_en"]);
+    assert.deepEqual(de("prestamos"), ["actualizado_en", "creado_en"]);
+
+    // Las filas que ya existían reciben la fecha de la migración.
+    const [libro] = await bd.consultar(
+      "SELECT creado_en FROM libros WHERE id = 1",
+    );
+    assert.ok(libro.creado_en);
+
+    const [auditoria] = await bd.consultar(
+      `SELECT COUNT(*) AS n FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'auditoria'`,
+    );
+    assert.equal(Number(auditoria.n), 1);
+  });
+
   it("reemplaza el borrado en cascada y protege el historial", async () => {
     const reglas = await bd.consultar(
       `SELECT DELETE_RULE AS regla FROM information_schema.REFERENTIAL_CONSTRAINTS
@@ -131,7 +166,8 @@ describe("migrar una base antigua", () => {
 
     const claves = await bd.consultar(
       `SELECT CONSTRAINT_TYPE AS tipo FROM information_schema.TABLE_CONSTRAINTS
-        WHERE TABLE_SCHEMA = DATABASE() AND CONSTRAINT_TYPE IN ('FOREIGN KEY', 'CHECK')`,
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('prestamos', 'libros')
+          AND CONSTRAINT_TYPE IN ('FOREIGN KEY', 'CHECK')`,
     );
     assert.equal(claves.filter((c) => c.tipo === "FOREIGN KEY").length, 2);
     assert.equal(claves.filter((c) => c.tipo === "CHECK").length, 1);
@@ -143,7 +179,8 @@ describe("migrar una base antigua", () => {
 
   it("reconoce los nombres anteriores de los archivos y no las repite", async () => {
     // Así quedó registrado en Railway antes de renombrar los archivos a inglés.
-    // La 004 no estaba registrada: se aplica de nuevo y no debe cambiar nada.
+    // La 004 y la 005 no estaban registradas: se aplican de nuevo y no deben
+    // cambiar nada.
     await bd.consultar("DELETE FROM migraciones");
     await bd.consultar(
       `INSERT INTO migraciones (nombre) VALUES
@@ -152,6 +189,7 @@ describe("migrar una base antigua", () => {
 
     assert.deepEqual(await migrar(sequelize), [
       "004-loan-due-dates-and-states.js",
+      "005-audit-and-book-details.js",
     ]);
 
     const registradas = await bd.consultar(
@@ -164,6 +202,7 @@ describe("migrar una base antigua", () => {
         "002-token-version.js",
         "003-protect-loan-history.js",
         "004-loan-due-dates-and-states.js",
+        "005-audit-and-book-details.js",
       ],
     );
     const [prestamo] = await bd.consultar(

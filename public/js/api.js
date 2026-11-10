@@ -204,6 +204,7 @@ function renderNavbar() {
           ["/admin-loans.html", "Préstamos"],
           ["/admin-books.html", "Libros"],
           ["/admin-users.html", "Usuarios"],
+          ["/admin-activity.html", "Actividad"],
         ]
       : [
           ["/catalog.html", "Catálogo"],

@@ -12,11 +12,17 @@ function colorLomo(categoria) {
   return `hsl(${h} 38% 38%)`;
 }
 
+// "Editorial · Año", solo con los datos que el libro tenga.
+const edicion = (libro) => {
+  const partes = [libro.editorial, libro.anio].filter(Boolean).map(esc);
+  return partes.length ? `<p class="suave">${partes.join(" · ")}</p>` : "";
+};
+
 function pintar(libros, busqueda) {
   const grid = $("grid");
   if (!libros.length) {
     grid.innerHTML = busqueda
-      ? `<div class="vacio" style="grid-column:1/-1"><strong>No hay libros con “${esc(busqueda)}”</strong>Prueba con otra palabra del título.</div>`
+      ? `<div class="vacio" style="grid-column:1/-1"><strong>No hay libros con “${esc(busqueda)}”</strong>Prueba con otra palabra del título, el autor o el ISBN.</div>`
       : `<div class="vacio" style="grid-column:1/-1"><strong>El catálogo está vacío</strong>Cuando se agreguen libros, aparecerán aquí.</div>`;
     return;
   }
@@ -29,6 +35,7 @@ function pintar(libros, busqueda) {
         <h3>${esc(l.titulo)}</h3>
         <p class="autor">${esc(l.autor)}</p>
         <p class="categoria">${esc(l.categoria)}</p>
+        ${edicion(l)}
         <p class="disp ${l.disponibles < 1 ? "agotado" : ""}">
           ${l.disponibles < 1 ? "Sin ejemplares" : `${l.disponibles} ${l.disponibles === 1 ? "disponible" : "disponibles"}`}
         </p>
@@ -43,7 +50,7 @@ async function cargar(pagina = paginaActual) {
   const busqueda = $("buscar").value.trim();
   try {
     const { datos, paginacion } = await api(
-      conConsulta("/libros", { titulo: busqueda, pagina }),
+      conConsulta("/libros", { buscar: busqueda, pagina }),
     );
     paginaActual = paginacion.pagina;
     pintar(datos, busqueda);

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const MARCAS_DE_TIEMPO = require("./timestamps");
 
 const Usuario = sequelize.define(
   "Usuario",
@@ -20,7 +21,7 @@ const Usuario = sequelize.define(
       defaultValue: 0,
     },
   },
-  { tableName: "usuarios", timestamps: false },
+  { tableName: "usuarios", ...MARCAS_DE_TIEMPO },
 );
 
 Usuario.prototype.datosPublicos = function () {

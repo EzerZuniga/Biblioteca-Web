@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const MARCAS_DE_TIEMPO = require("./timestamps");
 
 const Libro = sequelize.define(
   "Libro",
@@ -12,10 +13,14 @@ const Libro = sequelize.define(
       allowNull: false,
       defaultValue: "General",
     },
-    // Total de ejemplares. Los disponibles se calculan en services/inventario.js
+    // ISBN-10 o ISBN-13 sin guiones; único porque identifica una edición.
+    isbn: { type: DataTypes.STRING(13), allowNull: true, unique: true },
+    editorial: { type: DataTypes.STRING(150), allowNull: true },
+    anio: { type: DataTypes.SMALLINT, allowNull: true },
+    // Total de ejemplares. Los disponibles se calculan en services/inventory.js
     cantidad: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   },
-  { tableName: "libros", timestamps: false },
+  { tableName: "libros", ...MARCAS_DE_TIEMPO },
 );
 
 module.exports = Libro;

@@ -18,12 +18,17 @@ const resumen = async (req, res) => {
 };
 
 const aprobar = async (req, res) => {
-  const prestamo = await prestamos.aprobar(req.params.id);
+  const prestamo = await prestamos.aprobar(req.params.id, {
+    actorId: req.usuario.id,
+  });
   res.json({ mensaje: "Préstamo aprobado", prestamo });
 };
 
 const rechazar = async (req, res) => {
-  const prestamo = await prestamos.rechazar(req.params.id, req.body);
+  const prestamo = await prestamos.rechazar(req.params.id, {
+    ...req.body,
+    actorId: req.usuario.id,
+  });
   res.json({ mensaje: "Solicitud rechazada", prestamo });
 };
 
@@ -33,7 +38,9 @@ const cancelar = async (req, res) => {
 };
 
 const devolver = async (req, res) => {
-  const prestamo = await prestamos.devolver(req.params.id);
+  const prestamo = await prestamos.devolver(req.params.id, {
+    actorId: req.usuario.id,
+  });
   res.json({ mensaje: "Devolución registrada", prestamo });
 };
 

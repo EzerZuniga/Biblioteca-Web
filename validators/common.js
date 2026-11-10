@@ -8,6 +8,7 @@ const LIMITES = {
   titulo: 200,
   autor: 150,
   categoria: 100,
+  editorial: 150,
   // bcrypt ignora lo que pase de 72 bytes.
   passwordBytes: 72,
   enteroMaximo: 2147483647,
