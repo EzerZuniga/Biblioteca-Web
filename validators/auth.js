@@ -24,4 +24,22 @@ const login = z.object({
     .max(200, { error: FALTAN_DATOS }),
 });
 
-module.exports = { MIN_PASSWORD, registro, login };
+const recuperacion = z.object({ email });
+
+// El token del enlace son 32 bytes en base64url: 43 caracteres.
+const restablecimiento = z.object({
+  token: z
+    .string({ error: "El enlace no es válido o ya venció. Pide uno nuevo." })
+    .regex(/^[A-Za-z0-9_-]{43}$/, {
+      error: "El enlace no es válido o ya venció. Pide uno nuevo.",
+    }),
+  password: password(MIN_PASSWORD),
+});
+
+module.exports = {
+  MIN_PASSWORD,
+  registro,
+  login,
+  recuperacion,
+  restablecimiento,
+};

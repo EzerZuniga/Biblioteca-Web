@@ -60,7 +60,13 @@ async function borrarBaseDePrueba() {
 // respeta las claves foráneas: primero los préstamos.
 async function vaciarTablas() {
   const { sequelize } = modelos();
-  for (const tabla of ["auditoria", "prestamos", "libros", "usuarios"]) {
+  for (const tabla of [
+    "recuperaciones",
+    "auditoria",
+    "prestamos",
+    "libros",
+    "usuarios",
+  ]) {
     await sequelize.query(`DELETE FROM ${tabla}`);
   }
 }

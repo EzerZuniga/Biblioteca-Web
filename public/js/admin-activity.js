@@ -46,6 +46,16 @@ const DESCRIPCIONES = {
   "usuario.eliminado": (d) => `Eliminó al usuario ${d.nombre} (${d.email})`,
   "usuario.admin_guardado": (d) =>
     `Se ${d.resultado === "creado" ? "creó" : "actualizó"} el administrador ${d.email} desde la consola`,
+  "usuario.recuperacion_solicitada": (d) =>
+    `Se pidió un enlace para restablecer la contraseña de ${d.email}`,
+  "usuario.contrasena_restablecida": (d) =>
+    `Restableció su contraseña con un enlace (${d.email})`,
+};
+
+// Acciones que nadie con sesión hizo: el autor no es una cuenta eliminada.
+const AUTOR_SIN_CUENTA = {
+  "usuario.admin_guardado": "Sistema",
+  "usuario.recuperacion_solicitada": "Sin iniciar sesión",
 };
 
 const describir = (registro) =>
@@ -62,10 +72,7 @@ const FORMATO_FECHA = new Intl.DateTimeFormat("es-PE", {
 const quien = (registro) =>
   registro.actor
     ? `${esc(registro.actor.nombre)}<br><span class="suave">${esc(registro.actor.email)}</span>`
-    : registro.usuario_id === null &&
-        registro.accion === "usuario.admin_guardado"
-      ? '<span class="suave">Sistema</span>'
-      : '<span class="suave">Cuenta eliminada</span>';
+    : `<span class="suave">${esc(AUTOR_SIN_CUENTA[registro.accion] || "Cuenta eliminada")}</span>`;
 
 async function cargar(pagina = paginaActual) {
   try {

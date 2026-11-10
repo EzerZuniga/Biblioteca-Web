@@ -97,6 +97,34 @@ railway ssh
 ADMIN_EMAIL=admin@tu-dominio.com ADMIN_PASSWORD=una-clave-larga-123 npm run create-admin
 ```
 
+## Recuperar la contraseña
+
+Desde el login, "¿Olvidaste tu contraseña?" envía por correo un enlace para
+elegir una nueva. El enlace vence en 60 minutos, sirve una sola vez, y al usarlo
+se cierran todas las sesiones abiertas de esa cuenta.
+
+- **No revela cuentas.** La respuesta es la misma exista o no el email.
+- **Enlaces protegidos.** La base guarda solo el hash SHA-256 del token. Pedir
+  un enlace nuevo anula el anterior, y no se reenvía más de uno cada 2 minutos
+  por cuenta ni más de 5 por hora por conexión.
+- **Dominio fijo.** Los enlaces usan `URL_PUBLICA` o, en Railway, el dominio de
+  `RAILWAY_PUBLIC_DOMAIN`. Nunca el `Host` de la petición, que un atacante
+  podría falsificar para que el correo apunte a su sitio.
+
+**Configurar Resend:**
+
+1. Crea una cuenta en resend.com y una API key con permiso de envío.
+2. En Railway, en las variables del servicio de la app, agrega
+   `RESEND_API_KEY` con esa clave.
+3. Para enviar a cualquier email, verifica tu dominio en Resend (Domains) y
+   define `CORREO_REMITENTE`, por ejemplo `Biblioteca <no-responder@tu-dominio.com>`.
+   Sin dominio verificado, el remitente de prueba `onboarding@resend.dev` solo
+   puede enviar al email con el que creaste la cuenta de Resend.
+
+En tu máquina, sin `RESEND_API_KEY`, el correo no se envía: se muestra en la
+terminal con el enlace, para probar el flujo sin cuenta. En producción sin la
+clave no se envía nada y el error queda en los logs.
+
 ## Migraciones
 
 Los cambios de estructura o de datos de la base viven en `database/migrations/`.
@@ -261,6 +289,7 @@ que pide recargar la página.
 | Método              | Ruta (bajo `/api/v1`)                                | Quién                             |
 | ------------------- | ---------------------------------------------------- | --------------------------------- |
 | POST                | /auth/register, /auth/login, /auth/logout            | Público                           |
+| POST                | /auth/recuperar, /auth/restablecer                   | Público                           |
 | GET                 | /auth/yo (datos y rol actuales de la sesión)         | Con sesión                        |
 | GET / PUT / DELETE  | /usuarios, /usuarios/:id                             | Admin                             |
 | GET                 | /libros (`?buscar=`: título, autor o ISBN)           | Con sesión                        |

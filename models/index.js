@@ -3,6 +3,7 @@ const Usuario = require("./User");
 const Libro = require("./Book");
 const Prestamo = require("./Loan");
 const Auditoria = require("./AuditEntry");
+const Recuperacion = require("./PasswordReset");
 
 // RESTRICT: la base nunca borra préstamos en cascada. Un usuario o un libro con
 // historial de préstamos no se puede eliminar, ni por la app ni a mano.
@@ -25,4 +26,23 @@ Auditoria.belongsTo(Usuario, {
   onUpdate: "CASCADE",
 });
 
-module.exports = { sequelize, Usuario, Libro, Prestamo, Auditoria };
+// Los enlaces de recuperación no tienen sentido sin su usuario.
+Usuario.hasMany(Recuperacion, {
+  foreignKey: "usuario_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+Recuperacion.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+module.exports = {
+  sequelize,
+  Usuario,
+  Libro,
+  Prestamo,
+  Auditoria,
+  Recuperacion,
+};

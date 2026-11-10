@@ -68,7 +68,7 @@ describe("server.js", () => {
     const migraciones = servidor.logs.filter(
       (l) => l.msg === "Migración aplicada",
     );
-    assert.equal(migraciones.length, 5);
+    assert.equal(migraciones.length, 6);
     assert.ok(buscarLog(servidor, "Libros iniciales creados"));
   });
 

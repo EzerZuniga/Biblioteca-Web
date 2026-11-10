@@ -38,6 +38,20 @@ const limiteRegistro = limite({
     "Se crearon demasiadas cuentas desde esta conexión. Inténtalo en una hora.",
 });
 
+// Pedir enlaces de recuperación envía correos: pocos por hora y por conexión.
+const limiteRecuperacion = limite({
+  minutos: 60,
+  maximo: 5,
+  mensaje:
+    "Pediste demasiados enlaces desde esta conexión. Inténtalo en una hora.",
+});
+
+const limiteRestablecimiento = limite({
+  minutos: 15,
+  maximo: 10,
+  mensaje: "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo.",
+});
+
 // Límite general de la API para frenar abusos y scripts descontrolados.
 const limiteApi = limite({
   minutos: 1,
@@ -45,4 +59,11 @@ const limiteApi = limite({
   mensaje: "Demasiadas peticiones. Espera un momento e inténtalo de nuevo.",
 });
 
-module.exports = { cabeceras, limiteLogin, limiteRegistro, limiteApi };
+module.exports = {
+  cabeceras,
+  limiteLogin,
+  limiteRegistro,
+  limiteRecuperacion,
+  limiteRestablecimiento,
+  limiteApi,
+};

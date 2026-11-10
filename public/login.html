@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Iniciar sesión - Biblioteca</title>
-    <link rel="stylesheet" href="/css/styles.css?v=auditoria" />
+    <link rel="stylesheet" href="/css/styles.css?v=recuperacion" />
   </head>
   <body>
     <main class="auth">
@@ -20,9 +20,7 @@
       <section class="auth-form">
         <form id="formLogin" novalidate>
           <h2>Inicia sesión</h2>
-          <p id="aviso" class="aviso" hidden>
-            Tu cuenta está lista. Inicia sesión para continuar.
-          </p>
+          <p id="aviso" class="aviso" role="status" hidden></p>
           <p id="error" class="error" role="alert" hidden></p>
           <label
             >Email
@@ -41,12 +39,15 @@
             Iniciar sesión
           </button>
           <p class="suave">
+            <a href="/forgot-password.html">¿Olvidaste tu contraseña?</a>
+          </p>
+          <p class="suave">
             ¿No tienes cuenta? <a href="/register.html">Crea una</a>
           </p>
         </form>
       </section>
     </main>
-    <script src="/js/api.js?v=auditoria"></script>
-    <script src="/js/login.js?v=auditoria"></script>
+    <script src="/js/api.js?v=recuperacion"></script>
+    <script src="/js/login.js?v=recuperacion"></script>
   </body>
 </html>

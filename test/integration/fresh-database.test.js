@@ -42,6 +42,7 @@ describe("preparar una base vacía", () => {
         "003-protect-loan-history.js",
         "004-loan-due-dates-and-states.js",
         "005-audit-and-book-details.js",
+        "006-password-resets.js",
       ],
     );
     const [{ libros }] = await bd.consultar(
