@@ -42,9 +42,28 @@ describe("páginas del frontend", () => {
 describe("reglas de diseño", () => {
   const leer = (archivo) => fs.readFileSync(path.join(PUBLIC, archivo), "utf8");
 
-  it("la interfaz no tiene animaciones ni transiciones", () => {
+  // Quita los bloques @media que exigen prefers-reduced-motion: no-preference.
+  // Se cuentan llaves porque esos bloques llevan reglas anidadas.
+  const sinBloquesDeMovimiento = (css) => {
+    const inicio = /@media[^{]*prefers-reduced-motion:\s*no-preference[^{]*\{/;
+    let resto = css;
+    let encontrado;
+    while ((encontrado = inicio.exec(resto))) {
+      let nivel = 1;
+      let fin = encontrado.index + encontrado[0].length;
+      for (; fin < resto.length && nivel > 0; fin++) {
+        if (resto[fin] === "{") nivel++;
+        else if (resto[fin] === "}") nivel--;
+      }
+      resto = resto.slice(0, encontrado.index) + resto.slice(fin);
+    }
+    return resto;
+  };
+
+  it("solo hay transiciones si el sistema no pide reducir movimiento", () => {
     const css = leer("css/styles.css");
-    assert.doesNotMatch(css, /\btransition\s*:|\banimation\s*:|@keyframes/);
+    assert.doesNotMatch(css, /\banimation\s*:|@keyframes/);
+    assert.doesNotMatch(sinBloquesDeMovimiento(css), /\btransition\s*:/);
   });
 
   it("cada página cumple lo básico de accesibilidad y adaptabilidad", () => {

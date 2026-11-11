@@ -254,9 +254,15 @@ function renderNavbar() {
       </a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal" aria-label="Abrir menú">
         <span class="menu-icono" aria-hidden="true"></span>
-        <span class="menu-texto">Menú</span>
       </button>
+      <div class="menu-fondo" aria-hidden="true"></div>
       <div class="menu" id="menu-principal">
+        <div class="menu-cabecera">
+          <img src="/images/logo.webp" alt="" width="510" height="128" />
+          <button class="menu-cerrar" type="button" aria-label="Cerrar menú">
+            <span class="icono-cerrar" aria-hidden="true"></span>
+          </button>
+        </div>
         <nav aria-label="Principal">
           ${enlaces
             .map(
@@ -284,35 +290,53 @@ function renderNavbar() {
   saltar.textContent = "Saltar al contenido";
   document.body.prepend(saltar);
 
+  // Menú lateral (solo móvil). Mientras está abierto, todo lo que queda detrás
+  // se vuelve inerte: no recibe foco ni clics, así el teclado y el lector de
+  // pantalla se quedan dentro del panel.
   const botonMenu = barra.querySelector(".menu-toggle");
-  const cerrarMenu = () => {
-    barra.classList.remove("menu-abierto");
-    botonMenu.setAttribute("aria-expanded", "false");
-    botonMenu.setAttribute("aria-label", "Abrir menú");
+  const botonCerrar = barra.querySelector(".menu-cerrar");
+  const fondo = barra.querySelector(".menu-fondo");
+  const detras = () => [
+    ...[...document.body.children].filter((el) => el !== barra),
+    barra.querySelector(".marca"),
+    botonMenu,
+  ];
+  const menuAbierto = () => barra.classList.contains("menu-abierto");
+
+  const abrirMenu = () => {
+    barra.classList.add("menu-abierto");
+    document.documentElement.classList.add("sin-scroll");
+    botonMenu.setAttribute("aria-expanded", "true");
+    detras().forEach((el) => (el.inert = true));
+    botonCerrar.focus();
   };
 
-  botonMenu.addEventListener("click", () => {
-    const abierto = botonMenu.getAttribute("aria-expanded") !== "true";
-    barra.classList.toggle("menu-abierto", abierto);
-    botonMenu.setAttribute("aria-expanded", String(abierto));
-    botonMenu.setAttribute(
-      "aria-label",
-      abierto ? "Cerrar menú" : "Abrir menú",
-    );
-  });
+  const cerrarMenu = ({ devolverFoco = false } = {}) => {
+    if (!menuAbierto()) return;
+    barra.classList.remove("menu-abierto");
+    document.documentElement.classList.remove("sin-scroll");
+    botonMenu.setAttribute("aria-expanded", "false");
+    detras().forEach((el) => (el.inert = false));
+    if (devolverFoco) botonMenu.focus();
+  };
+
+  botonMenu.addEventListener("click", abrirMenu);
+  botonCerrar.addEventListener("click", () =>
+    cerrarMenu({ devolverFoco: true }),
+  );
+  fondo.addEventListener("click", () => cerrarMenu({ devolverFoco: true }));
 
   barra.querySelectorAll("nav a").forEach((enlace) => {
-    enlace.addEventListener("click", cerrarMenu);
+    enlace.addEventListener("click", () => cerrarMenu());
   });
 
   document.addEventListener("keydown", (evento) => {
-    if (evento.key === "Escape" && barra.classList.contains("menu-abierto")) {
-      cerrarMenu();
-      botonMenu.focus();
+    if (evento.key === "Escape" && menuAbierto()) {
+      cerrarMenu({ devolverFoco: true });
     }
   });
 
-  // Mismo punto de corte que el CSS: en pantallas anchas el menú no se pliega.
+  // Mismo punto de corte que el CSS: en pantallas anchas el menú va en línea.
   matchMedia("(min-width: 60rem)").addEventListener("change", (consulta) => {
     if (consulta.matches) cerrarMenu();
   });

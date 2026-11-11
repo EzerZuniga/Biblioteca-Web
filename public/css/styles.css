@@ -1,7 +1,8 @@
 /* ==========================================================================
    BookSmart: sistema de diseño
-   Móvil primero, sin animaciones ni transiciones, contraste AA en todo el
-   texto. Puntos de corte: 40rem (640px) y 60rem (960px).
+   Móvil primero, sin animaciones salvo el deslizamiento del menú lateral
+   (que respeta prefers-reduced-motion), contraste AA en todo el texto.
+   Puntos de corte: 40rem (640px) y 60rem (960px).
    ========================================================================== */
 
 /* 1. Variables ------------------------------------------------------------ */
@@ -171,27 +172,32 @@ img {
   width: auto;
 }
 
-.menu-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--espacio-2);
-  min-height: var(--alto-control);
-  padding: 0 var(--espacio-3);
-  font: inherit;
-  font-weight: 600;
+/* Botones de solo ícono (abrir y cerrar el menú): área táctil de 44px. */
+.menu-toggle,
+.menu-cerrar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--alto-control);
+  height: var(--alto-control);
+  padding: 0;
   color: var(--tinta);
   background: var(--superficie);
   border: 1px solid var(--borde-fuerte);
   border-radius: var(--radio);
   cursor: pointer;
 }
-.menu-toggle:hover {
+.menu-cerrar {
+  border-color: transparent;
+}
+.menu-toggle:hover,
+.menu-cerrar:hover {
   background: var(--fondo);
 }
-/* Ícono de tres líneas dibujado con bordes; al abrir se muestra una "X". */
+/* Hamburguesa: tres líneas dibujadas con bordes. */
 .menu-icono {
   position: relative;
-  width: 1.125rem;
+  width: 1.25rem;
   height: 0.875rem;
   border-top: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
@@ -204,11 +210,14 @@ img {
   top: calc(50% - 1px);
   border-top: 2px solid currentColor;
 }
-.menu-toggle[aria-expanded="true"] .menu-icono {
-  border: 0;
+/* "X" del botón de cerrar. */
+.icono-cerrar {
+  position: relative;
+  width: 1.125rem;
+  height: 1.125rem;
 }
-.menu-toggle[aria-expanded="true"] .menu-icono::before,
-.menu-toggle[aria-expanded="true"] .menu-icono::after {
+.icono-cerrar::before,
+.icono-cerrar::after {
   content: "";
   position: absolute;
   left: 0;
@@ -217,20 +226,85 @@ img {
   border-top: 2px solid currentColor;
   transform: rotate(45deg);
 }
-.menu-toggle[aria-expanded="true"] .menu-icono::after {
+.icono-cerrar::after {
   transform: rotate(-45deg);
 }
 
+/* Mientras el menú lateral está abierto, la página de atrás no se desplaza. */
+.sin-scroll {
+  overflow: hidden;
+}
+
+/* Fondo oscuro detrás del panel; un toque sobre él cierra el menú. */
+.menu-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(15 30 61 / 0.5);
+  opacity: 0;
+  visibility: hidden;
+}
+.barra.menu-abierto .menu-fondo {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Panel lateral: entra desde la derecha, del lado del botón que lo abre.
+   Cerrado queda con visibility: hidden, así sus enlaces no reciben foco. */
 .menu {
-  display: none;
-  flex-basis: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 31;
+  width: min(20rem, 85vw);
+  display: flex;
   flex-direction: column;
-  gap: var(--espacio-3);
-  padding: var(--espacio-2) 0 var(--espacio-3);
-  border-top: 1px solid var(--borde);
+  gap: var(--espacio-4);
+  padding: var(--espacio-2) var(--espacio-4)
+    calc(var(--espacio-4) + env(safe-area-inset-bottom));
+  padding-right: calc(var(--espacio-4) + env(safe-area-inset-right));
+  background: var(--superficie);
+  box-shadow: -0.5rem 0 1.5rem rgb(15 30 61 / 0.18);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform: translateX(100%);
+  visibility: hidden;
 }
 .barra.menu-abierto .menu {
+  transform: none;
+  visibility: visible;
+}
+/* Única animación del sitio: solo en móvil y si el sistema no pide reducir
+   movimiento. Al cerrar, visibility espera a que termine el deslizamiento. */
+@media (max-width: 59.99rem) and (prefers-reduced-motion: no-preference) {
+  .menu {
+    transition:
+      transform 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+  .menu-fondo {
+    transition:
+      opacity 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+  .barra.menu-abierto .menu,
+  .barra.menu-abierto .menu-fondo {
+    transition-delay: 0s;
+  }
+}
+
+.menu-cabecera {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding-bottom: var(--espacio-2);
+  border-bottom: 1px solid var(--borde);
+}
+.menu-cabecera img {
+  height: 2rem;
+  width: auto;
 }
 .menu nav {
   display: flex;
@@ -260,8 +334,14 @@ img {
   display: flex;
   align-items: center;
   gap: var(--espacio-3);
+  flex-wrap: wrap;
+  margin-top: auto;
   padding: var(--espacio-3) var(--espacio-3) 0;
   border-top: 1px solid var(--borde);
+}
+/* En el panel, "Cerrar sesión" va en su propia fila: el nombre no se corta. */
+.sesion > .btn {
+  flex-basis: 100%;
 }
 .avatar {
   flex: none;
@@ -297,18 +377,26 @@ img {
   .barra-interior {
     flex-wrap: nowrap;
   }
-  .menu-toggle {
+  .menu-toggle,
+  .menu-fondo,
+  .menu-cabecera {
     display: none;
   }
+  /* En pantallas anchas el panel deja de ser lateral y va en línea. */
   .menu {
-    display: flex;
+    position: static;
+    z-index: auto;
+    width: auto;
     flex: 1;
-    flex-basis: auto;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     padding: 0;
-    border: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    transform: none;
+    visibility: visible;
   }
   .menu nav {
     flex-direction: row;
@@ -317,8 +405,13 @@ img {
     min-height: 2.5rem;
   }
   .sesion {
+    flex-wrap: nowrap;
+    margin-top: 0;
     padding: 0;
     border: 0;
+  }
+  .sesion > .btn {
+    flex-basis: auto;
   }
   .sesion-datos {
     max-width: 14rem;
